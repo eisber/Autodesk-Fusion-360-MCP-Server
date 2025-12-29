@@ -185,7 +185,6 @@ Just open Claude, an ask for the FusionMCP
 | **Draw box** | Creates a **box** (solid body) with definable dimensions and position. |
 | **Draw cylinder** | Draws a **cylinder** (solid body). |
 | **Draw text**| Draws a text and extrudes it with given values |
-| **Draw Witzenmann logo** | A **fun demo function** for creating the Witzenmann logo. |
 
 ---
 

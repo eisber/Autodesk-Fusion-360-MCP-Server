@@ -11,11 +11,11 @@ import os
 
 ModelParameterSnapshot = []
 httpd = None
-task_queue = queue.Queue()  # Queue für thread-safe Aktionen
+task_queue = queue.Queue()  # Queue for thread-safe actions
 script_result = {"status": "idle", "result": None, "error": None}  # Storage for script execution results
 script_result_lock = threading.Lock()
 
-# Event Handler Variablen
+# Event Handler variables
 app = None
 ui = None
 design = None
@@ -37,10 +37,10 @@ class TaskEventHandler(adsk.core.CustomEventHandler):
         global task_queue, ModelParameterSnapshot, design, ui
         try:
             if design:
-                # Parameter Snapshot aktualisieren
+                # Update parameter snapshot
                 ModelParameterSnapshot = get_model_parameters(design)
                 
-                # Task-Queue abarbeiten
+                # Process task queue
                 while not task_queue.empty():
                     try:
                         task = task_queue.get_nowait()
@@ -49,7 +49,7 @@ class TaskEventHandler(adsk.core.CustomEventHandler):
                         break
                     except Exception as e:
                         if ui:
-                            ui.messageBox(f"Task-Fehler: {str(e)}")
+                            ui.messageBox(f"Task error: {str(e)}")
                         continue
                         
         except Exception as e:
@@ -57,7 +57,7 @@ class TaskEventHandler(adsk.core.CustomEventHandler):
             pass
     
     def process_task(self, task):
-        """Verarbeitet eine einzelne Task"""
+        """Process a single task"""
         global design, ui
         
         if task[0] == 'set_parameter':
@@ -87,8 +87,8 @@ class TaskEventHandler(adsk.core.CustomEventHandler):
         elif task[0] == 'revolve_profile':
             # 'rootComp = design.rootComponent
             # sketches = rootComp.sketches
-            # sketch = sketches.item(sketches.count - 1)  # Letzter Sketch
-            # axisLine = sketch.sketchCurves.sketchLines.item(0)  # Erste Linie als Achse'
+            # sketch = sketches.item(sketches.count - 1)  # Last sketch
+            # axisLine = sketch.sketchCurves.sketchLines.item(0)  # First line as axis'
             revolve_profile(design, ui,  task[1])        
         elif task[0] == 'arc':
             arc(design, ui, task[1], task[2], task[3], task[4],task[5])
@@ -146,7 +146,7 @@ class TaskThread(threading.Thread):
         self.stopped = event
 
     def run(self):
-        # Alle 200ms Custom Event feuern für Task-Verarbeitung
+        # Fire custom event every 200ms for task processing
         while not self.stopped.wait(0.2):
             try:
                 app.fireCustomEvent(myCustomEvent, json.dumps({}))
@@ -800,7 +800,7 @@ def shell_existing_body(design, ui, thickness=0.5, faceindex=0):
 
         shellInput.shellType = adsk.fusion.ShellTypes.SharpOffsetShellType
 
-        # Ausführen
+        # Execute
         shellFeats.add(shellInput)
 
     except:
@@ -986,8 +986,8 @@ def delete(design,ui):
         bodies = rootComp.bRepBodies
         removeFeat = rootComp.features.removeFeatures
 
-        # Von hinten nach vorne löschen
-        for i in range(bodies.count - 1, -1, -1): # startet bei bodies.count - 1 und geht in Schritten von -1 bis 0 
+        # Delete from back to front
+        for i in range(bodies.count - 1, -1, -1):  # starts at bodies.count - 1 and goes in steps of -1 to 0
             body = bodies.item(i)
             removeFeat.add(body)
 
@@ -1484,14 +1484,14 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_response(200)
                     self.send_header('Content-type','application/json')
                     self.end_headers()
-                    self.wfile.write(json.dumps({"message": f"Parameter {name} wird gesetzt"}).encode('utf-8'))
+                    self.wfile.write(json.dumps({"message": f"Setting parameter {name}"}).encode('utf-8'))
 
             elif path == '/undo':
                 task_queue.put(('undo',))
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Undo wird ausgeführt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Executing undo"}).encode('utf-8'))
 
             elif path == '/Box':
                 height = float(data.get('height',5))
@@ -1506,7 +1506,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Box wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating box"}).encode('utf-8'))
 
             elif path == '/Export_STL':
                 name = str(data.get('Name','Test.stl'))
@@ -1514,7 +1514,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "STL Export gestartet"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "STL export started"}).encode('utf-8'))
 
 
             elif path == '/Export_STEP':
@@ -1523,7 +1523,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "STEP Export gestartet"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "STEP export started"}).encode('utf-8'))
 
 
             elif path == '/fillet_edges':
@@ -1545,7 +1545,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Cylinder wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating cylinder"}).encode('utf-8'))
             
 
             elif path == '/shell_body':
@@ -1555,7 +1555,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Shell body wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating shell body"}).encode('utf-8'))
 
             elif path == '/draw_lines':
                 points = data.get('points', [])
@@ -1564,7 +1564,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Lines werden erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating lines"}).encode('utf-8'))
             
             elif path == '/extrude_last_sketch':
                 value = float(data.get('value',1.0)) #1.0 as default
@@ -1573,16 +1573,15 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Letzter Sketch wird extrudiert"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Extruding last sketch"}).encode('utf-8'))
                 
             elif path == '/revolve':
-                angle = float(data.get('angle',360)) #360 as default
-                #axis = data.get('axis','X')  # 'X', 'Y', 'Z'
+                angle = float(data.get('angle',360))  # 360 as default
                 task_queue.put(('revolve_profile', angle))
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Profil wird revolviert"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Revolving profile"}).encode('utf-8'))
             elif path == '/arc':
                 point1 = data.get('point1', [0,0])
                 point2 = data.get('point2', [1,1])
@@ -1593,7 +1592,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Arc wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating arc"}).encode('utf-8'))
             
             elif path == '/draw_one_line':
                 x1 = float(data.get('x1',0))
@@ -1607,7 +1606,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Line wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating line"}).encode('utf-8'))
             
             elif path == '/holes':
                 points = data.get('points', [[0,0]])
@@ -1622,7 +1621,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_header('Content-type','application/json')
                 self.end_headers()
                 
-                self.wfile.write(json.dumps({"message": "Loch wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating hole"}).encode('utf-8'))
 
             elif path == '/create_circle':
                 radius = float(data.get('radius',1.0))
@@ -1634,7 +1633,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Circle wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating circle"}).encode('utf-8'))
 
             elif path == '/extrude_thin':
                 thickness = float(data.get('thickness',0.5)) #0.5 as default
@@ -1643,7 +1642,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Thin Extrude wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating thin extrusion"}).encode('utf-8'))
 
             elif path == '/select_body':
                 name = str(data.get('name', ''))
@@ -1651,7 +1650,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Body wird ausgewählt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Selecting body"}).encode('utf-8'))
 
             elif path == '/select_sketch':
                 name = str(data.get('name', ''))
@@ -1660,7 +1659,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Sketch wird ausgewählt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Selecting sketch"}).encode('utf-8'))
 
             elif path == '/sweep':
                 # enqueue a tuple so process_task recognizes the command
@@ -1668,7 +1667,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Sweep wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating sweep"}).encode('utf-8'))
             
             elif path == '/spline':
                 points = data.get('points', [])
@@ -1677,7 +1676,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Spline wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating spline"}).encode('utf-8'))
 
             elif path == '/cut_extrude':
                 depth = float(data.get('depth',1.0)) #1.0 as default
@@ -1685,7 +1684,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Cut Extrude wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating cut extrusion"}).encode('utf-8'))
             
             elif path == '/circular_pattern':
                 quantity = float(data.get('quantity',))
@@ -1695,7 +1694,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Cirular Pattern wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating circular pattern"}).encode('utf-8'))
             
             elif path == '/offsetplane':
                 offset = float(data.get('offset',0.0))
@@ -1705,7 +1704,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Offset Plane wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating offset plane"}).encode('utf-8'))
 
             elif path == '/loft':
                 sketchcount = int(data.get('sketchcount',2))
@@ -1713,7 +1712,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Loft wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating loft"}).encode('utf-8'))
             
             elif path == '/ellipsis':
                  x_center = float(data.get('x_center',0))
@@ -1731,7 +1730,7 @@ class Handler(BaseHTTPRequestHandler):
                  self.send_response(200)
                  self.send_header('Content-type','application/json')
                  self.end_headers()
-                 self.wfile.write(json.dumps({"message": "Ellipsis wird erstellt"}).encode('utf-8'))
+                 self.wfile.write(json.dumps({"message": "Creating ellipse"}).encode('utf-8'))
                  
             elif path == '/sphere':
                 radius = float(data.get('radius',5.0))
@@ -1743,7 +1742,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Sphere wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating sphere"}).encode('utf-8'))
 
             elif path == '/threaded':
                 inside = bool(data.get('inside', True))
@@ -1752,14 +1751,14 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Threaded Feature wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating threaded feature"}).encode('utf-8'))
                 
             elif path == '/delete_everything':
                 task_queue.put(('delete_everything',))
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Alle Bodies werden gelöscht"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Deleting all bodies"}).encode('utf-8'))
                 
             elif path == '/boolean_operation':
                 operation = data.get('operation', 'join')  # 'join', 'cut', 'intersect'
@@ -1767,13 +1766,13 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Boolean Operation wird ausgeführt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Executing boolean operation"}).encode('utf-8'))
             
             elif path == '/test_connection':
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Verbindung erfolgreich"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Connection successful"}).encode('utf-8'))
             
             elif path == '/draw_2d_rectangle':
                 x_1 = float(data.get('x_1',0))
@@ -1787,7 +1786,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "2D Rechteck wird erstellt"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Creating 2D rectangle"}).encode('utf-8'))
             
             
             elif path == '/rectangular_pattern':
@@ -1798,12 +1797,12 @@ class Handler(BaseHTTPRequestHandler):
                  distance_two = float(data.get('distance_two',5))
                  axis_two = str(data.get('axis_two',"Y"))
                  plane = str(data.get('plane', 'XY'))  # 'XY', 'XZ', 'YZ'
-                 # Parameter-Reihenfolge: axis_one, axis_two, quantity_one, quantity_two, distance_one, distance_two, plane
+                 # Parameter order: axis_one, axis_two, quantity_one, quantity_two, distance_one, distance_two, plane
                  task_queue.put(('rectangular_pattern', axis_one, axis_two, quantity_one, quantity_two, distance_one, distance_two, plane))
                  self.send_response(200)
                  self.send_header('Content-type','application/json')
                  self.end_headers()
-                 self.wfile.write(json.dumps({"message": "Rectangular Pattern wird erstellt"}).encode('utf-8'))
+                 self.wfile.write(json.dumps({"message": "Creating rectangular pattern"}).encode('utf-8'))
                  
             elif path == '/draw_text':
                  text = str(data.get('text',"Hello"))
@@ -1820,7 +1819,7 @@ class Handler(BaseHTTPRequestHandler):
                  self.send_response(200)
                  self.send_header('Content-type','application/json')
                  self.end_headers()
-                 self.wfile.write(json.dumps({"message": "Text wird erstellt"}).encode('utf-8'))
+                 self.wfile.write(json.dumps({"message": "Creating text"}).encode('utf-8'))
                  
             elif path == '/move_body':
                 x = float(data.get('x',0))
@@ -1830,7 +1829,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_response(200)
                 self.send_header('Content-type','application/json')
                 self.end_headers()
-                self.wfile.write(json.dumps({"message": "Body wird verschoben"}).encode('utf-8'))
+                self.wfile.write(json.dumps({"message": "Moving body"}).encode('utf-8'))
             
             else:
                 self.send_error(404,'Not Found')
@@ -1853,26 +1852,26 @@ def run(context):
         design = adsk.fusion.Design.cast(app.activeProduct)
 
         if design is None:
-            ui.messageBox("Kein aktives Design geöffnet!")
+            ui.messageBox("No active design open!")
             return
 
-        # Initialer Snapshot
+        # Initial snapshot
         global ModelParameterSnapshot
         ModelParameterSnapshot = get_model_parameters(design)
 
-        # Custom Event registrieren
-        customEvent = app.registerCustomEvent(myCustomEvent) #Every 200ms we create a custom event which doesnt interfere with Fusion main thread
-        onTaskEvent = TaskEventHandler() #If we have tasks in the queue, we process them in the main thread
-        customEvent.add(onTaskEvent) # Here we add the event handler
+        # Register custom event
+        customEvent = app.registerCustomEvent(myCustomEvent)  # Every 200ms we create a custom event which doesn't interfere with Fusion main thread
+        onTaskEvent = TaskEventHandler()  # If we have tasks in the queue, we process them in the main thread
+        customEvent.add(onTaskEvent)  # Here we add the event handler
         handlers.append(onTaskEvent)
 
-        # Task Thread starten
+        # Start task thread
         stopFlag = threading.Event()
         taskThread = TaskThread(stopFlag)
         taskThread.daemon = True
         taskThread.start()
 
-        ui.messageBox(f"Fusion HTTP Add-In gestartet! Port 5000.\nParameter geladen: {len(ModelParameterSnapshot)} Modellparameter")
+        ui.messageBox(f"Fusion HTTP Add-In started! Port 5000.\nParameters loaded: {len(ModelParameterSnapshot)} model parameters")
 
         # HTTP-Server starten
         threading.Thread(target=run_server, daemon=True).start()

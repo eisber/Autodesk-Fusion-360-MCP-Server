@@ -1,6 +1,6 @@
 # Fusion 360 API Configuration
 
-# Base URL für den Fusion 360 Server
+# Base URL for the Fusion 360 server
 BASE_URL = "http://localhost:5000"
 
 # API Endpoints
@@ -51,5 +51,5 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-# Timeouts (in Sekunden)
+# Timeouts (in seconds)
 REQUEST_TIMEOUT = 30

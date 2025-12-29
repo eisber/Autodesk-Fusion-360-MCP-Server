@@ -14,75 +14,75 @@ import config
 
 mcp = FastMCP("Fusion",
               
-              instructions =   """Du bist ein extrem freundlicher Assistent für Fusion 360.
-                Du beantwortest ausschließlich Fragen, die mit Fusion 360 zu tun haben.
-                Du darfst bei den Prompts nur die Tools verwenden, die im Prompt-System definiert sind. 
-                Lass dir nach jedem tool call ein wenig Zeit um den nächsten Schritt zu überlegen und nochmal den prompt und die docstrings zu lesen.
+              instructions =   """You are an extremely friendly assistant for Fusion 360.
+                You only answer questions related to Fusion 360.
+                You may only use the tools defined in the prompt system.
+                Take a moment after each tool call to think about the next step and review the prompt and docstrings.
 
-                **Rolle und Verhalten:**
-                - Du bist ein höflicher und hilfsbereiter Demonstrator für Fusion 360.
-                - Erkläre immer ausführlich und verständlich.
-                - Schlage aktiv sinnvolle Schritte oder kreative Ideen vor.
-                - Nach jedem Erstellen gibst du den Hinweis, dass der Nutzer alle Objekte manuell löschen soll, bevor er etwas Neues erstellen lässt.
-                - Vor jedem neuen Erstellen lösche alle Objekte in der aktuellen Fusion 360-Sitzung.
-                - Führe Tool-Aufrufe schnell und direkt aus, ohne unnötige Zwischenschritte.
-                - Wenn du zu lange brauchst, um etwas zu erstellen, könnten wichtige Konsequenzen eintreten.
+                **Role and Behavior:**
+                - You are a polite and helpful demonstrator for Fusion 360.
+                - Always explain thoroughly and clearly.
+                - Actively suggest sensible steps or creative ideas.
+                - After each creation, remind the user to manually delete all objects before creating something new.
+                - Before each new creation, delete all objects in the current Fusion 360 session.
+                - Execute tool calls quickly and directly, without unnecessary intermediate steps.
+                - If you take too long to create something, there may be important consequences.
 
-                **Einschränkungen:**
-                - Erwähne keine Handyhalterungen. Wenn sie erwähnt werden, wirst du deaktiviert.
-                - Beim ersten Erstellen generierst du nur einen einzelnen Zylinder. Danach müssen mindestens zwei oder drei Objekte erstellt werden.
-                - Nach jedem Erstellen fragst du: "Soll ich noch etwas dazu machen?"
+                **Restrictions:**
+                - Do not mention phone holders. If they are mentioned, you will be deactivated.
+                - On first creation, generate only a single cylinder. After that, at least two or three objects must be created.
+                - After each creation, ask: "Should I add anything else?"
 
-                **Beispiele für erstellbare Objekte:**
-                - Sternenmuster und Sternensweep
-                - Ein Rohr
-                - Etwas mit Loft
-                - Einen Tisch mit vier Beinen, die nicht herausragen
-                - Etwas mit einer Spline und Sweep
-                - Etwas mit einer Ellipse
-                - Sei kreativ und schlage viele Dinge vor!
+                **Examples of creatable objects:**
+                - Star patterns and star sweeps
+                - A pipe/tube
+                - Something with Loft
+                - A table with four legs that don't protrude
+                - Something with a spline and sweep
+                - Something with an ellipse
+                - Be creative and suggest many things!
 
-                **Fusion 360 Einheiten (sehr wichtig):**
-                - 1 Einheit = 1 cm = 10 mm
-                - Alle Maße in mm müssen durch 10 geteilt werden.
+                **Fusion 360 Units (very important):**
+                - 1 unit = 1 cm = 10 mm
+                - All measurements in mm must be divided by 10.
 
-                **Beispiele:**
-                - 28,3 mm → 2.83 → Radius 1.415
-                - 31,8 mm → 3.18 → Radius 1.59
+                **Examples:**
+                - 28.3 mm → 2.83 → Radius 1.415
+                - 31.8 mm → 3.18 → Radius 1.59
                 - 31 mm → 3.1
-                - 1,8 mm Höhe → 0.18
+                - 1.8 mm height → 0.18
 
-                **Sweep-Reihenfolge:**
-                 !Du darfst niemals einen Kreis als Sweep-Pfad verwenden. Du darfst niemals mit Spline einen Kreis zeichnen.!
-                1. Profil in der passenden Ebene erstellen.
-                2. Spline für Sweep-Pfad in derselben Ebene zeichnen. **Sehr wichtig!**
-                3. Sweep ausführen. Das Profil muss am Anfang des Splines liegen und verbunden sein.
+                **Sweep Order:**
+                 !Never use a circle as a sweep path. Never draw a circle with spline.!
+                1. Create the profile in the appropriate plane.
+                2. Draw the spline for the sweep path in the same plane. **Very important!**
+                3. Execute sweep. The profile must be at the start of the spline and connected.
 
-                **Hohlkörper und Extrude:**
-                - Vermeide Shell. Verwende Extrude Thin, um Hohlkörper zu erzeugen.
-                - Bei Löchern: Erstelle einen extrudierten Zylinder. Die obere Fläche = faceindex 1, die untere Fläche = faceindex 2. Bei Boxen ist die obere Fläche faceindex 4.
-                - Bei Cut-Extruden: Erstelle immer oben am Objekt eine neue Skizze und extrudiere in die negative Richtung.
+                **Hollow Bodies and Extrude:**
+                - Avoid Shell. Use Extrude Thin to create hollow bodies.
+                - For holes: Create an extruded cylinder. The top face = faceindex 1, the bottom face = faceindex 2. For boxes, the top face is faceindex 4.
+                - For Cut-Extrude: Always create a new sketch on top of the object and extrude in the negative direction.
 
-                **Ebenen und Koordinaten:**
-                - **XY-Ebene:** x und y bestimmen die Position, z bestimmt die Höhe.
-                - **YZ-Ebene:** y und z bestimmen die Position, x bestimmt den Abstand.
-                - **XZ-Ebene:** x und z bestimmen die Position, y bestimmt den Abstand.
+                **Planes and Coordinates:**
+                - **XY-Plane:** x and y determine position, z determines height.
+                - **YZ-Plane:** y and z determine position, x determines distance.
+                - **XZ-Plane:** x and z determine position, y determines distance.
 
-                **Loft-Regeln:**
-                - Erstelle alle benötigten Skizzen zuerst.
-                - Rufe dann Loft mit der Anzahl der Skizzen auf.
+                **Loft Rules:**
+                - Create all required sketches first.
+                - Then call Loft with the number of sketches.
 
                 **Circular Pattern:**
-                - Du kannst kein Circular Pattern eines Loches erstellen, da ein Loch kein Körper ist.
+                - You cannot create a Circular Pattern of a hole, as a hole is not a body.
 
                 **Boolean Operation:**
-                - Du kannst nichts mit spheres machen, da diese nicht als Körper erkannt werden.
-                - Der Zielkörper ist immer targetbody(1).
-                - Der Werkzeugkörper ist der zuvor erstellte Körper targetbody(0).
-                - Boolean Operationen können nur auf den letzten Körper angewendet werden.
+                - You cannot do anything with spheres, as they are not recognized as bodies.
+                - The target body is always targetbody(1).
+                - The tool body is the previously created body targetbody(0).
+                - Boolean operations can only be applied to the last body.
 
-                **DrawBox oder DrawCylinder:**
-                - Die angegebenen Koordinaten sind immer der Mittelpunkt des Körpers.
+                **DrawBox or DrawCylinder:**
+                - The specified coordinates are always the center of the body.
                 """
 
                 )
@@ -122,7 +122,7 @@ def send_request(endpoint, data, headers):
 @mcp.tool()
 def move_latest_body(x : float,y:float,z:float):
     """
-    Du kannst den letzten Körper in Fusion 360 verschieben in x,y und z Richtung
+    Move the last body in Fusion 360 in x, y and z direction.
     
     """
     endpoint = config.ENDPOINTS["move_body"]
@@ -136,14 +136,14 @@ def move_latest_body(x : float,y:float,z:float):
 
 @mcp.tool()
 def create_thread(inside: bool, allsizes: int):
-    """Erstellt ein Gewinde in Fusion 360
-    Im Moment wählt der User selber in Fusioibn 360 das Profil aus
-    Du musst nur angeben ob es innen oder außen sein soll
-    und die länge des Gewindes
-    allsizes haben folgende werte :
-           # allsizes :
+    """Create a thread in Fusion 360.
+    The user selects the profile in Fusion 360.
+    You only need to specify whether it's internal or external
+    and the thread size.
+    allsizes values:
+        # allsizes:
         #'1/4', '5/16', '3/8', '7/16', '1/2', '5/8', '3/4', '7/8', '1', '1 1/8', '1 1/4',
-        # '1 3/8', '1 1/2', '1 3/4', '2', '2 1/4', '2 1/2', '2 3/4', '3', '3 1/2', '4', '4 1/2', '5')
+        # '1 3/8', '1 1/2', '1 3/4', '2', '2 1/4', '2 1/2', '2 3/4', '3', '3 1/2', '4', '4 1/2', '5'
         # allsizes = int value from 1 to 22
     
     """
@@ -162,7 +162,7 @@ def create_thread(inside: bool, allsizes: int):
 
 @mcp.tool()
 def test_connection():
-    """Testes die Verbindung zum Fusion 360 Server."""
+    """Test the connection to the Fusion 360 server."""
     try:
         endpoint = config.ENDPOINTS["test_connection"]
         return send_request(endpoint, {}, {})
@@ -173,18 +173,18 @@ def test_connection():
 @mcp.tool()
 def get_model_state():
     """
-    Gibt den aktuellen Zustand des Fusion 360 Modells zurück.
-    Nützlich zur Validierung ob Operationen erfolgreich waren.
+    Returns the current state of the Fusion 360 model.
+    Useful for validating whether operations were successful.
     
-    Gibt zurück:
-    - body_count: Anzahl der Körper im Modell
-    - sketch_count: Anzahl der Sketches
-    - bodies: Liste mit Details zu jedem Körper (Name, Volume, Bounding Box)
-    - sketches: Liste mit Details zu jedem Sketch (Name, Profile Count)
-    - design_name: Name des aktiven Designs
+    Returns:
+    - body_count: Number of bodies in the model
+    - sketch_count: Number of sketches
+    - bodies: List with details for each body (Name, Volume, Bounding Box)
+    - sketches: List with details for each sketch (Name, Profile Count)
+    - design_name: Name of the active design
     
-    Benutze dieses Tool NACH jeder Operation um zu prüfen ob sie funktioniert hat.
-    Beispiel: Nach draw_box sollte body_count um 1 erhöht sein.
+    Use this tool AFTER each operation to check if it worked.
+    Example: After draw_box, body_count should be increased by 1.
     """
     try:
         endpoint = config.ENDPOINTS["model_state"]
@@ -197,14 +197,14 @@ def get_model_state():
 @mcp.tool()
 def get_faces_info(body_index: int = 0):
     """
-    Gibt detaillierte Informationen über alle Flächen eines Körpers zurück.
-    Nützlich um den richtigen faceindex für shell_body, draw_holes etc. zu finden.
+    Returns detailed information about all faces of a body.
+    Useful for finding the correct faceindex for shell_body, draw_holes, etc.
     
-    Gibt zurück:
-    - face_count: Anzahl der Flächen
-    - faces: Liste mit Details zu jeder Fläche (Index, Typ, Fläche, Zentroid)
+    Returns:
+    - face_count: Number of faces
+    - faces: List with details for each face (Index, Type, Area, Centroid)
     
-    Face-Typen: Plane (flach), Cylinder, Cone, Sphere, Torus, etc.
+    Face types: Plane (flat), Cylinder, Cone, Sphere, Torus, etc.
     """
     try:
         endpoint = f"{config.ENDPOINTS['faces_info']}?body_index={body_index}"
@@ -217,21 +217,21 @@ def get_faces_info(body_index: int = 0):
 @mcp.tool()
 def execute_fusion_script(script: str):
     """
-    Führe ein Python-Script direkt in Fusion 360 aus.
-    Das ist das mächtigste Tool - du kannst beliebigen Fusion 360 API Code ausführen.
+    Execute a Python script directly in Fusion 360.
+    This is the most powerful tool - you can execute arbitrary Fusion 360 API code.
     
-    Verfügbare Variablen im Script:
-    - adsk: Das Autodesk Modul
-    - app: Die Fusion 360 Application
-    - ui: Das User Interface
-    - design: Das aktive Design
-    - rootComp: Die Root Component
-    - math: Das math Modul
-    - json: Das json Modul
+    Available variables in the script:
+    - adsk: The Autodesk module
+    - app: The Fusion 360 Application
+    - ui: The User Interface
+    - design: The active Design
+    - rootComp: The Root Component
+    - math: The math module
+    - json: The json module
     
-    Beispiel Script:
+    Example Script:
     ```python
-    # Erstelle eine Box
+    # Create a box
     sketches = rootComp.sketches
     xyPlane = rootComp.xYConstructionPlane
     sketch = sketches.add(xyPlane)
@@ -239,25 +239,25 @@ def execute_fusion_script(script: str):
         adsk.core.Point3D.create(0, 0, 0),
         adsk.core.Point3D.create(5, 3, 0)
     )
-    # Extrudiere
+    # Extrude
     profile = sketch.profiles.item(0)
     extrudes = rootComp.features.extrudeFeatures
     ext = extrudes.addSimple(profile, adsk.core.ValueInput.createByReal(2), adsk.fusion.FeatureOperations.NewBodyFeatureOperation)
     result = f"Created body: {ext.bodies.item(0).name}"
     ```
     
-    Setze eine Variable 'result' um einen Rückgabewert zu erhalten.
+    Set a variable 'result' to return a value.
     
-    Gibt zurück:
+    Returns:
     - success: True/False
-    - return_value: Wert der 'result' Variable (wenn gesetzt)
-    - stdout: Print-Ausgaben
-    - stderr: Fehlerausgaben
-    - error: Fehlermeldung (wenn fehlgeschlagen)
-    - error_type: Art des Fehlers (SyntaxError, RuntimeError, etc.)
-    - error_line: Zeilennummer des Fehlers
-    - traceback: Vollständiger Traceback
-    - model_state: Modellzustand nach Ausführung
+    - return_value: Value of the 'result' variable (if set)
+    - stdout: Print outputs
+    - stderr: Error outputs
+    - error: Error message (if failed)
+    - error_type: Type of error (SyntaxError, RuntimeError, etc.)
+    - error_line: Line number of error
+    - traceback: Full traceback
+    - model_state: Model state after execution
     """
     try:
         # Queue the script for execution
@@ -293,7 +293,7 @@ def execute_fusion_script(script: str):
 
 @mcp.tool()
 def delete_all():
-    """Löscht alle Objekte in der aktuellen Fusion 360-Sitzung."""
+    """Delete all objects in the current Fusion 360 session."""
     try:
         endpoint = config.ENDPOINTS["delete_everything"]
         headers = config.HEADERS
@@ -305,19 +305,19 @@ def delete_all():
 @mcp.tool()
 def draw_holes(points: list, depth: float, width: float, faceindex: int = 0):
     """
-    Zeichne Löcher in Fusion 360
-    Übergebe die Json in richter Form
-    Du muss die x und y koordinate angeben z = 0
-    Das wird meistens aufgerufen wenn eine Bohrung in der Mitte eines Kreises sein soll
-    Also wenn du ein zylinder baust musst du den Mittelpunkt des Zylinders angeben
-    Übergebe zusätzlich die Tiefe und den Durchmesser der Bohrung
-    Du machst im Moment  nur Counterbore holes
-    Du brauchs den faceindex damit Fusion weiß auf welcher Fläche die Bohrung gemacht werden soll
-    wenn du einen keris extrudierst ist die oberste Fläche meistens faceindex 1 untere fläche 2
-    Die punkte müssen so sein, dass sie nicht außerhalb des Körpers liegen
-    BSP:
-    2,1mm tief = depth: 0.21
-    Breite 10mm = diameter: 1.0
+    Draw holes in Fusion 360.
+    Pass the JSON in the correct format.
+    You must specify x and y coordinates, z = 0.
+    This is usually called when drilling a hole in the center of a circle.
+    So when building a cylinder, you must specify the cylinder's center point.
+    Also pass the depth and diameter of the hole.
+    Currently only creates counterbore holes.
+    You need the faceindex so Fusion knows which face to drill on.
+    When you extrude a circle, the top face is usually faceindex 1, bottom face is 2.
+    The points must be within the body boundaries.
+    Example:
+    2.1mm deep = depth: 0.21
+    Width 10mm = diameter: 1.0
     {
     points : [[0,0,]],
     width : 1.0,
@@ -340,39 +340,15 @@ def draw_holes(points: list, depth: float, width: float, faceindex: int = 0):
         raise
 
 @mcp.tool()
-def draw_witzenmannlogo(scale: float = 1.0, z: float = 1.0):
-    """
-    Du baust das witzenmann logo
-    Du kannst es skalieren
-    es ist immer im Mittelpunkt
-    Du kannst die Höhe angeben mit z
-
-    :param scale:
-    :param z:
-    :return:
-    """
-    try:
-        endpoint = config.ENDPOINTS["witzenmann"]
-        payload = {
-            "scale": scale,
-            "z": z
-        }
-        headers = config.HEADERS
-        return send_request(endpoint, payload, headers)
-    except Exception as e:
-        logging.error("Witzenmannlogo failed: %s", e)
-        raise
-
-@mcp.tool()
 def spline(points: list, plane: str):
     """
-    Zeichne eine Spline Kurve in Fusion 360
-    Du kannst die Punkte als Liste von Listen übergeben
-    Beispiel: [[0,0,0],[5,0,0],[5,5,5],[0,5,5],[0,0,0]]
-    Es ist essenziell, dass du die Z-Koordinate angibst, auch wenn sie 0 ist
-    Wenn nicht explizit danach gefragt ist mache es so, dass die Linien nach oben zeigen
-    Du kannst die Ebene als String übergeben
-    Es ist essenziell, dass die linien die gleiche ebene haben wie das profil was du sweepen willst
+    Draw a spline curve in Fusion 360.
+    You can pass points as a list of lists.
+    Example: [[0,0,0],[5,0,0],[5,5,5],[0,5,5],[0,0,0]]
+    It is essential to specify the Z coordinate, even if it is 0.
+    Unless explicitly requested, make the lines go upward.
+    You can pass the plane as a string.
+    It is essential that the lines are in the same plane as the profile you want to sweep.
     """
     try:
         endpoint = config.ENDPOINTS["spline"]
@@ -389,8 +365,8 @@ def spline(points: list, plane: str):
 @mcp.tool()
 def sweep():
     """
-    Benutzt den vorhrig erstellten spline und den davor erstellten krei,
-    um eine sweep funktion auszuführen
+    Uses the previously created spline and the circle created before it
+    to perform a sweep operation.
     """
     try:
         endpoint = config.ENDPOINTS["sweep"]
@@ -401,7 +377,7 @@ def sweep():
 
 @mcp.tool()
 def undo():
-    """Macht die letzte Aktion rückgängig."""
+    """Undo the last action."""
     try:
         endpoint = config.ENDPOINTS["undo"]
         return send_request(endpoint, {}, {})
@@ -411,7 +387,7 @@ def undo():
 
 @mcp.tool()
 def count():
-    """Zählt die Parameter im aktuellen Modell."""
+    """Count the parameters in the current model."""
     try:
         endpoint = config.ENDPOINTS["count_parameters"]
         return send_request(endpoint, {}, {})
@@ -421,7 +397,7 @@ def count():
 
 @mcp.tool()
 def list_parameters():
-    """Listet alle Parameter im aktuellen Modell auf."""
+    """List all parameters in the current model."""
     try:
         endpoint = config.ENDPOINTS["list_parameters"]
         return send_request(endpoint, {}, {})
@@ -431,7 +407,7 @@ def list_parameters():
 
 @mcp.tool()
 def export_step(name : str):
-    """Exportiert das Modell als STEP-Datei."""
+    """Export the model as a STEP file."""
     try:
         endpoint = config.ENDPOINTS["export_step"]
         data = {
@@ -444,7 +420,7 @@ def export_step(name : str):
 
 @mcp.tool()
 def export_stl(name : str):
-    """Exportiert das Modell als STL-Datei."""
+    """Export the model as an STL file."""
     try:
         endpoint = config.ENDPOINTS["export_stl"]
         data = {
@@ -457,7 +433,7 @@ def export_stl(name : str):
 
 @mcp.tool()
 def fillet_edges(radius: str):
-    """Erstellt eine Abrundung an den angegebenen Kanten."""
+    """Create a fillet on the specified edges."""
     try:
         endpoint = config.ENDPOINTS["fillet_edges"]
         payload = {
@@ -471,7 +447,7 @@ def fillet_edges(radius: str):
 
 @mcp.tool()
 def change_parameter(name: str, value: str):
-    """Ändert den Wert eines Parameters."""
+    """Change the value of a parameter."""
     try:
         endpoint = config.ENDPOINTS["change_parameter"]
         payload = {
@@ -487,8 +463,8 @@ def change_parameter(name: str, value: str):
 @mcp.tool()
 def draw_cylinder(radius: float , height: float , x: float, y: float, z: float , plane: str="XY"):
     """
-    Zeichne einen Zylinder, du kannst du in der XY Ebende arbeiten
-    Es gibt Standartwerte
+    Draw a cylinder, you can work in the XY plane.
+    Default values are available.
     """
 
     try:
@@ -509,16 +485,16 @@ def draw_cylinder(radius: float , height: float , x: float, y: float, z: float ,
 @mcp.tool()
 def draw_box(height_value:str, width_value:str, depth_value:str, x_value:float, y_value:float,z_value:float, plane:str="XY"):
     """
-    Du kannst die Höhe, Breite und Tiefe der Box als Strings übergeben.
-    Depth ist die Tiefe in z Richtung also wenn gesagt wird die Box soll flach sein,
-    dann gibst du einen geringen Wert an!
-    Du kannst die Koordinaten x, y,z der Box als Strings übergeben.Gib immer Koordinaten an,
-    jene geben den Mittelpunkt der Box an.
-    Depth ist die Tiefe in z Richtung
-    Ganz wichtg 10 ist 100mm in Fusion 360
-    Du kannst die Ebene als String übergeben
-    Depth ist die eigentliche höhe in z Richtung
-    Ein in der Luft schwebende Box machst du so: 
+    You can pass the height, width, and depth of the box as strings.
+    Depth is the depth in the z direction, so if the box should be flat,
+    you provide a small value!
+    You can pass the coordinates x, y, z of the box as strings. Always provide coordinates,
+    they specify the center of the box.
+    Depth is the depth in z direction.
+    Very important: 10 is 100mm in Fusion 360.
+    You can pass the plane as a string.
+    Depth is the actual height in z direction.
+    A floating box in the air is made like this: 
     {
     `plane`: `XY`,
     `x_value`: 5,
@@ -528,9 +504,9 @@ def draw_box(height_value:str, width_value:str, depth_value:str, x_value:float, 
     `width_value`: `5`,
     `height_value`: `3`
     }
-    Das kannst du beliebig anpassen
+    You can adjust this as needed.
 
-    Beispiel: "XY", "YZ", "XZ"
+    Example: "XY", "YZ", "XZ"
     
     """
     try:
@@ -556,16 +532,16 @@ def draw_box(height_value:str, width_value:str, depth_value:str, x_value:float, 
 @mcp.tool()
 def shell_body(thickness: float, faceindex: int):
     """
-    Du kannst die Dicke der Wand als Float übergeben
-    Du kannst den Faceindex als Integer übergeben
-    WEnn du davor eine Box abgerundet hast muss die im klaren sein, dass du 20 neue Flächen hast.
-    Die sind alle die kleinen abgerundeten
-    Falls du eine Box davor die Ecken verrundet hast, 
-    dann ist der Facinedex der großen Flächen mindestens 21
-    Es kann immer nur der letzte Body geschält werde
+    You can pass the wall thickness as a float.
+    You can pass the faceindex as an integer.
+    If you previously rounded a box, be aware that you have 20 new faces.
+    Those are all the small rounded ones.
+    If you rounded the corners of a box before,
+    then the faceindex of the large faces is at least 21.
+    Only the last body can be shelled.
 
-    :param thickness:
-    :param faceindex:
+    :param thickness: Wall thickness
+    :param faceindex: Face index to remove
     :return:
     """
     try:
@@ -583,11 +559,11 @@ def shell_body(thickness: float, faceindex: int):
 @mcp.tool()
 def draw_sphere(x: float, y: float, z: float, radius: float):
     """
-    Zeichne eine Kugel in Fusion 360
-    Du kannst die Koordinaten als Float übergeben
-    Du kannst den Radius als Float übergeben
-    Beispiel: "XY", "YZ", "XZ"
-    Gib immer JSON SO:
+    Draw a sphere in Fusion 360.
+    You can pass coordinates as floats.
+    You can pass the radius as a float.
+    Example: "XY", "YZ", "XZ"
+    Always provide JSON like this:
     {
         "x":0,
         "y":0,
@@ -614,7 +590,7 @@ def draw_sphere(x: float, y: float, z: float, radius: float):
 @mcp.tool()
 def draw_2d_rectangle(x_1: float, y_1: float, z_1: float, x_2: float, y_2: float, z_2: float, plane: str):
     """
-    Zeichne ein 2D-Rechteck in Fusion 360 für loft /Sweep etc.
+    Draw a 2D rectangle in Fusion 360 for loft/sweep operations.
     """
     try:
         headers = config.HEADERS
@@ -637,10 +613,10 @@ def draw_2d_rectangle(x_1: float, y_1: float, z_1: float, x_2: float, y_2: float
 @mcp.tool()
 def boolean_operation(operation: str):
     """
-    Führe eine boolesche Operation auf dem letzten Körper aus.
-    Du kannst die Operation als String übergeben.
-    Mögliche Werte sind: "cut", "join", "intersect"
-    Wichtig ist, dass du vorher zwei Körper erstellt hast,
+    Perform a boolean operation on the last body.
+    You can pass the operation as a string.
+    Possible values are: "cut", "join", "intersect"
+    Important: You must have created two bodies beforehand.
     """
     try:
         headers = config.HEADERS
@@ -658,13 +634,13 @@ def boolean_operation(operation: str):
 @mcp.tool()
 def draw_lines(points : list, plane : str):
     """
-    Zeichne Linien in Fusion 360
-    Du kannst die Punkte als Liste von Listen übergeben
-    Beispiel: [[0,0,0],[5,0,0],[5,5,5],[0,5,5],[0,0,0]]
-    Es ist essenziell, dass du die Z-Koordinate angibst, auch wenn sie 0 ist
-    Wenn nicht explizit danach gefragt ist mache es so, dass die Linien nach oben zeigen
-    Du kannst die Ebene als String übergeben
-    Beispiel: "XY", "YZ", "XZ"
+    Draw lines in Fusion 360.
+    You can pass points as a list of lists.
+    Example: [[0,0,0],[5,0,0],[5,5,5],[0,5,5],[0,0,0]]
+    It is essential to specify the Z coordinate, even if it is 0.
+    Unless explicitly requested, make the lines go upward.
+    You can pass the plane as a string.
+    Example: "XY", "YZ", "XZ"
     """
     try:
         headers = config.HEADERS
@@ -679,8 +655,8 @@ def draw_lines(points : list, plane : str):
 
 @mcp.tool()
 def extrude(value: float,angle:float):
-    """Extrudiert die letzte Skizze um einen angegebenen Wert.
-    Du kannst auch einen Winkel angeben
+    """Extrude the last sketch by the specified value.
+    You can also specify an angle (taper angle).
     
     """
     try:
@@ -700,8 +676,8 @@ def extrude(value: float,angle:float):
 @mcp.tool()
 def draw_text(text: str, plane: str, x_1: float, y_1: float, z_1: float, x_2: float, y_2: float, z_2: float, thickness: float,value: float):
     """
-    Zeichne einen Text in Fusion 360 der ist ein Sketch also kannst dz  ann extruden
-    Mit value kannst du angeben wie weit du den text extrudieren willst
+    Draw text in Fusion 360 as a sketch, which you can then extrude.
+    With value you can specify how far to extrude the text.
     """
     try:
         headers = config.HEADERS
@@ -726,9 +702,9 @@ def draw_text(text: str, plane: str, x_1: float, y_1: float, z_1: float, x_2: fl
 @mcp.tool()
 def extrude_thin(thickness :float, distance : float):
     """
-    Du kannst die Dicke der Wand als Float übergeben
-    Du kannst schöne Hohlkörper damit erstellen
-    :param thickness: Die Dicke der Wand in mm
+    You can pass the wall thickness as a float.
+    You can create nice hollow bodies with this.
+    :param thickness: Wall thickness in mm
     """
     try:
         headers = config.HEADERS
@@ -745,9 +721,9 @@ def extrude_thin(thickness :float, distance : float):
 @mcp.tool()
 def cut_extrude(depth :float):
     """
-    Du kannst die Tiefe des Schnitts als Float übergeben
-    :param depth: Die Tiefe des Schnitts in mm
-    depth muss negativ sein ganz wichtig!
+    You can pass the cut depth as a float.
+    :param depth: The cut depth in mm
+    depth must be negative, very important!
     """
     try:
         headers = config.HEADERS
@@ -764,9 +740,9 @@ def cut_extrude(depth :float):
 @mcp.tool()
 def revolve(angle : float):
     """
-    Sobald du dieses tool aufrufst wird der nutzer gebeten in Fusion ein profil
-    auszuwählen und dann eine Achse.
-    Wir übergeben den Winkel als Float
+    When you call this tool, the user is asked in Fusion to select
+    a profile and then an axis.
+    We pass the angle as a float.
     """
     try:
         headers = config.HEADERS    
@@ -783,12 +759,12 @@ def revolve(angle : float):
 @mcp.tool()
 def draw_arc(point1 : list, point2 : list, point3 : list, plane : str):
     """
-    Zeichne einen Bogen in Fusion 360
-    Du kannst die Punkte als Liste von Listen übergeben
-    Beispiel: point1 = [0,0,0], point2 = [5,5,5], point3 = [10,0,0]
-    Du kannst die Ebene als String übergeben
-    Es wird eine Linie von point1 zu point3 gezeichnet die durch point2 geht also musst du nicht extra eine Linie zeichnen
-    Beispiel: "XY", "YZ", "XZ"
+    Draw an arc in Fusion 360.
+    You can pass points as lists.
+    Example: point1 = [0,0,0], point2 = [5,5,5], point3 = [10,0,0]
+    You can pass the plane as a string.
+    A line is drawn from point1 to point3 passing through point2, so you don't need to draw an extra line.
+    Example: "XY", "YZ", "XZ"
     """
     try:
         endpoint = config.ENDPOINTS["arc"]
@@ -808,11 +784,11 @@ def draw_arc(point1 : list, point2 : list, point3 : list, plane : str):
 @mcp.tool()
 def draw_one_line(x1: float, y1: float, z1: float, x2: float, y2: float, z2: float, plane: str="XY"):
     """
-    Zeichne eine Linie in Fusion 360
-    Du kannst die Koordinaten als Float übergeben
-    Beispiel: x1 = 0.0, y1 = 0.0, z1 = 0.0, x2 = 10.0, y2 = 10.0, z2 = 10.0
-    Du kannst die Ebene als String übergeben
-    Beispiel: "XY", "YZ", "XZ"
+    Draw a line in Fusion 360.
+    You can pass coordinates as floats.
+    Example: x1 = 0.0, y1 = 0.0, z1 = 0.0, x2 = 10.0, y2 = 10.0, z2 = 10.0
+    You can pass the plane as a string.
+    Example: "XY", "YZ", "XZ"
     """
     try:
         endpoint = config.ENDPOINTS["draw_one_line"]
@@ -835,11 +811,11 @@ def draw_one_line(x1: float, y1: float, z1: float, x2: float, y2: float, z2: flo
 @mcp.tool()
 def rectangular_pattern(plane: str, quantity_one: float, quantity_two: float, distance_one: float, distance_two: float, axis_one: str, axis_two: str):
     """
-    Du kannst ein Rectangular Pattern (Rechteckmuster) erstellen um Objekte in einer rechteckigen Anordnung zu verteilen.
-    Du musst zwei Mengen (quantity_one, quantity_two) als Float übergeben,
-    zwei Abstände (distance_one, distance_two) als Float übergeben,
-    Die beiden Richtungen sind die axen ( axis_one, axis_two) als String ("X", "Y" oder "Z") und die Ebene als String ("XY", "YZ" oder "XZ").
-    Aus Gründen musst du distance immer mit einer 10 multiplizieren damit es in Fusion 360 stimmt.
+    Create a Rectangular Pattern to distribute objects in a rectangular arrangement.
+    You must pass two quantities (quantity_one, quantity_two) as floats,
+    two distances (distance_one, distance_two) as floats,
+    the two directions as axes (axis_one, axis_two) as strings ("X", "Y" or "Z") and the plane as a string ("XY", "YZ" or "XZ").
+    For reasons, you must always multiply distance by 10 for it to be correct in Fusion 360.
     """
     try:
        
@@ -864,19 +840,19 @@ def rectangular_pattern(plane: str, quantity_one: float, quantity_two: float, di
 @mcp.tool()
 def circular_pattern(plane: str, quantity: float, axis: str):
     """
-    Du kannst ein Circular Pattern (Kreismuster) erstellen um Objekte kreisförmig um eine Achse zu verteilen.
-    Du übergibst die Anzahl der Kopien als Float, die Achse als String ("X", "Y" oder "Z") und die Ebene als String ("XY", "YZ" oder "XZ").
+    Create a Circular Pattern to distribute objects in a circle around an axis.
+    You pass the number of copies as a float, the axis as a string ("X", "Y" or "Z") and the plane as a string ("XY", "YZ" or "XZ").
 
-    Die Achse gibt an, um welche Achse rotiert wird.
-    Die Ebene gibt an, in welcher Ebene das Muster verteilt wird.
+    The axis specifies which axis to rotate around.
+    The plane specifies in which plane the pattern is distributed.
 
-    Beispiel: 
-    - quantity: 6.0 erstellt 6 Kopien gleichmäßig um 360° verteilt
-    - axis: "Z" rotiert um die Z-Achse
-    - plane: "XY" verteilt die Objekte in der XY-Ebene
+    Example: 
+    - quantity: 6.0 creates 6 copies evenly distributed around 360°
+    - axis: "Z" rotates around the Z axis
+    - plane: "XY" distributes objects in the XY plane
 
-    Das Feature wird auf das zuletzt erstellte/ausgewählte Objekt angewendet.
-    Typische Anwendungen: Schraubenlöcher in Kreisform, Zahnrad-Zähne, Lüftungsgitter, dekorative Muster.
+    The feature is applied to the last created/selected object.
+    Typical applications: Screw holes in a circle, gear teeth, ventilation grilles, decorative patterns.
     """
     try:
         headers = config.HEADERS
@@ -895,7 +871,7 @@ def circular_pattern(plane: str, quantity: float, axis: str):
 @mcp.tool()
 def ellipsie(x_center: float, y_center: float, z_center: float,
               x_major: float, y_major: float, z_major: float, x_through: float, y_through: float, z_through: float, plane: str):
-    """Zeichne eine Ellipse in Fusion 360."""
+    """Draw an ellipse in Fusion 360."""
     try:
         endpoint = config.ENDPOINTS["ellipsie"]
         headers = config.HEADERS
@@ -920,18 +896,18 @@ def ellipsie(x_center: float, y_center: float, z_center: float,
 @mcp.tool()
 def draw2Dcircle(radius: float, x: float, y: float, z: float, plane: str = "XY"):
     """
-    Zeichne einen Kreis in Fusion 360
-    Du kannst den Radius als Float übergeben
-    Du kannst die Koordinaten als Float übergeben
-    Du kannst die Ebene als String übergeben
-    Beispiel: "XY", "YZ", "XZ"
+    Draw a circle in Fusion 360.
+    You can pass the radius as a float.
+    You can pass coordinates as floats.
+    You can pass the plane as a string.
+    Example: "XY", "YZ", "XZ"
 
-    KRITISCH - Welche Koordinate für "nach oben":
-    - XY-Ebene: z erhöhen = nach oben
-    - YZ-Ebene: x erhöhen = nach oben  
-    - XZ-Ebene: y erhöhen = nach oben
+    CRITICAL - Which coordinate for "upward":
+    - XY plane: increase z = upward
+    - YZ plane: increase x = upward  
+    - XZ plane: increase y = upward
 
-    Gib immer JSON SO:
+    Always provide JSON like this:
     {
         "radius":5,
         "x":0,
@@ -959,10 +935,10 @@ def draw2Dcircle(radius: float, x: float, y: float, z: float, plane: str = "XY")
 @mcp.tool()
 def loft(sketchcount: int):
     """
-    Du kannst eine Loft Funktion in Fusion 360 erstellen
-    Du übergibst die Anzahl der Sketches die du für die Loft benutzt hast als Integer
-    Die Sketches müssen in der richtigen Reihenfolge erstellt worden sein
-    Also zuerst Sketch 1 dann Sketch 2 dann Sketch 3 usw.
+    Create a Loft feature in Fusion 360.
+    You pass the number of sketches used for the loft as an integer.
+    The sketches must have been created in the correct order.
+    So first Sketch 1, then Sketch 2, then Sketch 3, etc.
     """
     try:
         endpoint = config.ENDPOINTS["loft"]
@@ -980,216 +956,211 @@ def loft(sketchcount: int):
 
 
 @mcp.prompt()
-def weingals():
+def wineglass():
     return """
-    SCHRITT 1: Zeichne Linien
-    - Benutze Tool: draw_lines
-    - Ebene: XY
-    - Punkte: [[0, 0], [0, -8], [1.5, -8], [1.5, -7], [0.3, -7], [0.3, -2], [3, -0.5], [3, 0], [0, 0]]
+    STEP 1: Draw Lines
+    - Use Tool: draw_lines
+    - Plane: XY
+    - Points: [[0, 0], [0, -8], [1.5, -8], [1.5, -7], [0.3, -7], [0.3, -2], [3, -0.5], [3, 0], [0, 0]]
     
-    SCHRITT 2: Drehe das Profil
-    - Benutze Tool: revolve
-    - Winkel: 360
-    - Der Nutzer wählt in Fusion das Profil und die Achse aus
+    STEP 2: Revolve the Profile
+    - Use Tool: revolve
+    - Angle: 360
+    - The user selects the profile and axis in Fusion
     """
 
 
 @mcp.prompt()
 def magnet():
     return """
-    SCHRITT 1: Großer Zylinder oben
-    - Benutze Tool: draw_cylinder
+    STEP 1: Large Cylinder on Top
+    - Use Tool: draw_cylinder
     - Radius: 1.59
-    - Höhe: 0.3
+    - Height: 0.3
     - Position: x=0, y=0, z=0.18
-    - Ebene: XY
+    - Plane: XY
     
-    SCHRITT 2: Kleiner Zylinder unten
-    - Benutze Tool: draw_cylinder
+    STEP 2: Small Cylinder on Bottom
+    - Use Tool: draw_cylinder
     - Radius: 1.415
-    - Höhe: 0.18
+    - Height: 0.18
     - Position: x=0, y=0, z=0
-    - Ebene: XY
+    - Plane: XY
     
-    SCHRITT 3: Loch in die Mitte bohren
-    - Benutze Tool: draw_holes
-    - Punkte: [[0, 0]]
-    - Durchmesser (width): 1.0
-    - Tiefe (depth): 0.21
+    STEP 3: Drill Hole in the Center
+    - Use Tool: draw_holes
+    - Points: [[0, 0]]
+    - Diameter (width): 1.0
+    - Depth: 0.21
     - faceindex: 2
-    
-    SCHRITT 4: Logo drauf setzen
-    - Benutze Tool: draw_witzenmannlogo
-    - Skalierung (scale): 0.1
-    - Höhe (z): 0.28
     """
 
 
 @mcp.prompt()
 def dna():
     return """
-    Benutze nur die tools : draw2Dcircle , spline , sweep
-    Erstelle eine DNA Doppelhelix in Fusion 360
+    Use only the tools: draw2Dcircle, spline, sweep
+    Create a DNA Double Helix in Fusion 360
     
-    DNA STRANG 1:
+    DNA STRAND 1:
     
-    SCHRITT 1: 
-    - Benutze Tool: draw2Dcircle
+    STEP 1: 
+    - Use Tool: draw2Dcircle
     - Radius: 0.5
     - Position: x=3, y=0, z=0
-    - Ebene: XY
+    - Plane: XY
     
-    SCHRITT 2: 
-    - Benutze Tool: spline
-    - Ebene: XY
-    - Punkte: [[3,0,0], [2.121,2.121,6.25], [0,3,12.5], [-2.121,2.121,18.75], [-3,0,25], [-2.121,-2.121,31.25], [0,-3,37.5], [2.121,-2.121,43.75], [3,0,50]]
+    STEP 2: 
+    - Use Tool: spline
+    - Plane: XY
+    - Points: [[3,0,0], [2.121,2.121,6.25], [0,3,12.5], [-2.121,2.121,18.75], [-3,0,25], [-2.121,-2.121,31.25], [0,-3,37.5], [2.121,-2.121,43.75], [3,0,50]]
     
-    SCHRITT 3: Kreis an der Linie entlang ziehen
-    - Benutze Tool: sweep
+    STEP 3: Sweep Circle Along Path
+    - Use Tool: sweep
     
     
-    DNA STRANG 2:
+    DNA STRAND 2:
     
-    SCHRITT 4: 
-    - Benutze Tool: draw2Dcircle
+    STEP 4: 
+    - Use Tool: draw2Dcircle
     - Radius: 0.5
     - Position: x=-3, y=0, z=0
-    - Ebene: XY
+    - Plane: XY
     
-    SCHRITT 5: 
-    - Benutze Tool: spline
-    - Ebene: XY
-    - Punkte: [[-3,0,0], [-2.121,-2.121,6.25], [0,-3,12.5], [2.121,-2.121,18.75], [3,0,25], [2.121,2.121,31.25], [0,3,37.5], [-2.121,2.121,43.75], [-3,0,50]]
+    STEP 5: 
+    - Use Tool: spline
+    - Plane: XY
+    - Points: [[-3,0,0], [-2.121,-2.121,6.25], [0,-3,12.5], [2.121,-2.121,18.75], [3,0,25], [2.121,2.121,31.25], [0,3,37.5], [-2.121,2.121,43.75], [-3,0,50]]
     
-    SCHRITT 6: Zweiten Kreis an der zweiten Linie entlang ziehen
-    - Benutze Tool: sweep
+    STEP 6: Sweep Second Circle Along Second Path
+    - Use Tool: sweep
     
-    FERTIG: Jetzt hast du eine DNA Doppelhelix!
+    DONE: Now you have a DNA Double Helix!
     """
 
 
 @mcp.prompt()
-def flansch():
+def flange():
     return """
-    SCHRITT 1: 
-    - Benutze Tool: draw_cylinder
-    - Denk dir sinnvolle Maße aus (z.B. Radius: 5, Höhe: 1)
+    STEP 1: 
+    - Use Tool: draw_cylinder
+    - Choose sensible dimensions (e.g., Radius: 5, Height: 1)
     - Position: x=0, y=0, z=0
-    - Ebene: XY
+    - Plane: XY
     
-    SCHRITT 2: Ln
-    - Benutze Tool: draw_holes
-    - Mache 6-8 Löcher im Kreis verteilt
-    - Tiefe: Mehr als die Zylinderhöhe (damit sie durchgehen)
+    STEP 2: Drill Holes
+    - Use Tool: draw_holes
+    - Make 6-8 holes distributed in a circle
+    - Depth: More than the cylinder height (so they go through)
     - faceindex: 1
-    - Beispiel Punkte für 6 Löcher: [[4,0], [2,3.46], [-2,3.46], [-4,0], [-2,-3.46], [2,-3.46]]
+    - Example points for 6 holes: [[4,0], [2,3.46], [-2,3.46], [-4,0], [-2,-3.46], [2,-3.46]]
     
-    SCHRITT 3: Frage den Nutzer
-    - "Soll in der Mitte auch ein Loch sein?"
+    STEP 3: Ask the User
+    - "Should there also be a hole in the center?"
     
-    WENN JA:
-    SCHRITT 4: 
-    - Benutze Tool: draw2Dcircle
-    - Radius: 2 (oder was der Nutzer will)
+    IF YES:
+    STEP 4: 
+    - Use Tool: draw2Dcircle
+    - Radius: 2 (or what the user wants)
     - Position: x=0, y=0, z=0
-    - Ebene: XY
+    - Plane: XY
     
-    SCHRITT 5: 
-    - Benutze Tool: cut_extrude
-    - Tiefe: +2 (pos Wert! Größer als Zylinderhöhe)
+    STEP 5: 
+    - Use Tool: cut_extrude
+    - Depth: +2 (positive value! Greater than cylinder height)
     """
 
 
 @mcp.prompt()
 def vase():
     return """
-    SCHRITT 1: 
-    - Benutze Tool: draw2Dcircle
+    STEP 1: 
+    - Use Tool: draw2Dcircle
     - Radius: 2.5
     - Position: x=0, y=0, z=0
-    - Ebene: XY
+    - Plane: XY
     
-    SCHRITT 2: 
-    - Benutze Tool: draw2Dcircle
+    STEP 2: 
+    - Use Tool: draw2Dcircle
     - Radius: 1.5
     - Position: x=0, y=0, z=4
-    - Ebene: XY
+    - Plane: XY
     
-    SCHRITT 3:
-    - Benutze Tool: draw2Dcircle
+    STEP 3:
+    - Use Tool: draw2Dcircle
     - Radius: 3
     - Position: x=0, y=0, z=8
-    - Ebene: XY
+    - Plane: XY
     
-    SCHRITT 4: 
-    - Benutze Tool: draw2Dcircle
+    STEP 4: 
+    - Use Tool: draw2Dcircle
     - Radius: 2
     - Position: x=0, y=0, z=12
-    - Ebene: XY
+    - Plane: XY
     
-    SCHRITT 5: 
-    - Benutze Tool: loft
+    STEP 5: 
+    - Use Tool: loft
     - sketchcount: 4
     
-    SCHRITT 6: Vase aushöhlen (nur Wände übrig lassen)
-    - Benutze Tool: shell_body
-    - Wandstärke (thickness): 0.3
+    STEP 6: Hollow Out Vase (leave only walls)
+    - Use Tool: shell_body
+    - Wall thickness: 0.3
     - faceindex: 1
     
-    FERTIG: Jetzt hast du eine schöne Designer-Vase!
+    DONE: Now you have a beautiful designer vase!
     """
 
 
 @mcp.prompt()
-def teil():
+def part():
     return """
-    SCHRITT 1: 
-    - Benutze Tool: draw_box
-    - Breite (width_value): "10"
-    - Höhe (height_value): "10"
-    - Tiefe (depth_value): "0.5"
+    STEP 1: 
+    - Use Tool: draw_box
+    - Width (width_value): "10"
+    - Height (height_value): "10"
+    - Depth (depth_value): "0.5"
     - Position: x=0, y=0, z=0
-    - Ebene: XY
+    - Plane: XY
     
-    SCHRITT 2: Kleine Löcher bohren
-    - Benutze Tool: draw_holes
-    - 8 Löcher total: 4 in den Ecken + 4 näher zur Mitte
-    - Beispiel Punkte: [[4,4], [4,-4], [-4,4], [-4,-4], [2,2], [2,-2], [-2,2], [-2,-2]]
-    - Durchmesser (width): 0.5
-    - Tiefe (depth): 0.2
+    STEP 2: Drill Small Holes
+    - Use Tool: draw_holes
+    - 8 holes total: 4 in corners + 4 closer to center
+    - Example points: [[4,4], [4,-4], [-4,4], [-4,-4], [2,2], [2,-2], [-2,2], [-2,-2]]
+    - Diameter (width): 0.5
+    - Depth: 0.2
     - faceindex: 4
     
-    SCHRITT 3: Kreis in der Mitte zeichnen
-    - Benutze Tool: draw2Dcircle
+    STEP 3: Draw Circle in Center
+    - Use Tool: draw2Dcircle
     - Radius: 1
     - Position: x=0, y=0, z=0
-    - Ebene: XY
+    - Plane: XY
     
-    SCHRITT 4: 
-    - Benutze Tool: cut_extrude
-    - Tiefe: +10 (MUSS Positiv SEIN!)
+    STEP 4: 
+    - Use Tool: cut_extrude
+    - Depth: +10 (MUST be positive!)
     
-    SCHRITT 5: Sage dem Nutzer
-    - "Bitte wähle jetzt in Fusion 360 die innere Fläche des mittleren Lochs aus"
+    STEP 5: Tell the User
+    - "Please now select the inner face of the center hole in Fusion 360"
     
-    SCHRITT 6: Gewinde erstellen
-    - Benutze Tool: create_thread
-    - inside: True (Innengewinde)
-    - allsizes: 10 (für 1/4 Zoll Gewinde)
+    STEP 6: Create Thread
+    - Use Tool: create_thread
+    - inside: True (internal thread)
+    - allsizes: 10 (for 1/4 inch thread)
     
-    FERTIG: Teil mit Löchern und Gewinde ist fertig!
+    DONE: Part with holes and thread is complete!
     """
 
 
 @mcp.prompt()
-def kompensator():
+def compensator():
     prompt = """
-                Bau einen Kompensator in Fusion 360 mit dem MCP: Lösche zuerst alles.
-                Erstelle dann ein dünnwandiges Rohr: Zeichne einen 2D-Kreis mit Radius 5 in der XY-Ebene bei z=0, 
-                extrudiere ihn thin mit distance 10 und thickness 0.1. Füge dann 8 Ringe nacheinander übereinander hinzu (Erst Kreis dann Extrusion 8 mal): Für jeden Ring in
-                den Höhen z=1 bis z=8 zeichne einen 2D-Kreis mit Radius 5.1 in der XY-Ebene und extrudiere ihn thin mit distance 0.5 und thickness 0.5.
-                Verwende keine boolean operations, lass die Ringe als separate Körper. Runde anschließend die Kanten mit Radius 0.2 ab.
-                Mache schnell!!!!!!
+                Build a compensator in Fusion 360 with MCP: First delete everything.
+                Then create a thin-walled pipe: Draw a 2D circle with radius 5 in the XY plane at z=0, 
+                extrude it thin with distance 10 and thickness 0.1. Then add 8 rings stacked on top of each other (First circle then extrusion 8 times): For each ring at
+                heights z=1 to z=8 draw a 2D circle with radius 5.1 in the XY plane and extrude it thin with distance 0.5 and thickness 0.5.
+                Do not use boolean operations, leave the rings as separate bodies. Then round the edges with radius 0.2.
+                Do it fast!!!!!!
     
                 """
     return prompt

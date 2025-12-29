@@ -427,7 +427,7 @@ class TestDrawText:
             thickness=0.5,
             x_1=0, y_1=0, z_1=0,
             x_2=10, y_2=5, z_2=0,
-            extrusion_value=2,
+            value=2,
             plane="XY"
         )
 
@@ -453,7 +453,7 @@ class TestDrawText:
             thickness=0.5,
             x_1=0, y_1=0, z_1=0,
             x_2=10, y_2=0, z_2=5,
-            extrusion_value=2,
+            value=2,
             plane="XZ"
         )
 
@@ -472,7 +472,7 @@ class TestDrawText:
             thickness=0.5,
             x_1=0, y_1=0, z_1=0,
             x_2=10, y_2=5, z_2=0,
-            extrusion_value=2,
+            value=2,
             plane="XY"
         )
 

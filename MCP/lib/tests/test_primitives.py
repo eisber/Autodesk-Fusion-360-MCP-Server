@@ -135,10 +135,10 @@ class TestDrawCylinder:
 
         draw_cylinder(mock_design, mock_ui, radius=2.5, height=5, x=0, y=0, z=10, plane="XY")
 
-        # Verify offset plane was created
-        planes = mock_design.rootComponent.constructionPlanes
-        planes.createInput.assert_called_once()
-        planes.add.assert_called_once()
+        # Verify sketch was created on XY plane (z is passed to Point3D, not as offset)
+        mock_design.rootComponent.sketches.add.assert_called_once()
+        call_args = mock_design.rootComponent.sketches.add.call_args
+        assert call_args[0][0] == mock_design.rootComponent.xYConstructionPlane
 
     def test_draw_cylinder_with_offset_xz(self, mock_design, mock_ui, mock_sketch):
         """Test cylinder creation on XZ plane with Y offset."""
@@ -146,9 +146,10 @@ class TestDrawCylinder:
 
         draw_cylinder(mock_design, mock_ui, radius=2.5, height=5, x=0, y=10, z=0, plane="XZ")
 
-        # Verify offset plane was created
-        planes = mock_design.rootComponent.constructionPlanes
-        planes.createInput.assert_called_once()
+        # Verify sketch was created on XZ plane (y is passed to Point3D, not as offset)
+        mock_design.rootComponent.sketches.add.assert_called_once()
+        call_args = mock_design.rootComponent.sketches.add.call_args
+        assert call_args[0][0] == mock_design.rootComponent.xZConstructionPlane
 
     def test_draw_cylinder_with_offset_yz(self, mock_design, mock_ui, mock_sketch):
         """Test cylinder creation on YZ plane with X offset."""
@@ -156,9 +157,10 @@ class TestDrawCylinder:
 
         draw_cylinder(mock_design, mock_ui, radius=2.5, height=5, x=10, y=0, z=0, plane="YZ")
 
-        # Verify offset plane was created
-        planes = mock_design.rootComponent.constructionPlanes
-        planes.createInput.assert_called_once()
+        # Verify sketch was created on YZ plane (x is passed to Point3D, not as offset)
+        mock_design.rootComponent.sketches.add.assert_called_once()
+        call_args = mock_design.rootComponent.sketches.add.call_args
+        assert call_args[0][0] == mock_design.rootComponent.yZConstructionPlane
 
     def test_draw_cylinder_error_handling(self, mock_design, mock_ui, mock_sketch):
         """Test error handling in draw_cylinder."""

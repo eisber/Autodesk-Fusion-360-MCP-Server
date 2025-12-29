@@ -5,9 +5,12 @@ BASE_URL = "http://localhost:5000"
 
 # API Endpoints
 ENDPOINTS = {
+    "model_state": f"{BASE_URL}/model_state",
+    "faces_info": f"{BASE_URL}/faces_info",
+    "execute_script": f"{BASE_URL}/execute_script",
+    "script_result": f"{BASE_URL}/script_result",
     "holes": f"{BASE_URL}/holes",
     "destroy": f"{BASE_URL}/destroy",
-    "witzenmann": f"{BASE_URL}/Witzenmann",
     "spline": f"{BASE_URL}/spline",
     "sweep": f"{BASE_URL}/sweep",
     "undo": f"{BASE_URL}/undo",

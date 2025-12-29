@@ -2,6 +2,8 @@ import argparse
 import json
 import logging
 import requests
+import traceback
+import time
 from mcp.server.fastmcp import FastMCP
 import config
 
@@ -167,6 +169,127 @@ def test_connection():
     except Exception as e:
         logging.error("Test connection failed: %s", e)
         raise
+
+@mcp.tool()
+def get_model_state():
+    """
+    Gibt den aktuellen Zustand des Fusion 360 Modells zurück.
+    Nützlich zur Validierung ob Operationen erfolgreich waren.
+    
+    Gibt zurück:
+    - body_count: Anzahl der Körper im Modell
+    - sketch_count: Anzahl der Sketches
+    - bodies: Liste mit Details zu jedem Körper (Name, Volume, Bounding Box)
+    - sketches: Liste mit Details zu jedem Sketch (Name, Profile Count)
+    - design_name: Name des aktiven Designs
+    
+    Benutze dieses Tool NACH jeder Operation um zu prüfen ob sie funktioniert hat.
+    Beispiel: Nach draw_box sollte body_count um 1 erhöht sein.
+    """
+    try:
+        endpoint = config.ENDPOINTS["model_state"]
+        response = requests.get(endpoint, timeout=10)
+        return response.json()
+    except Exception as e:
+        logging.error("Get model state failed: %s", e)
+        raise
+
+@mcp.tool()
+def get_faces_info(body_index: int = 0):
+    """
+    Gibt detaillierte Informationen über alle Flächen eines Körpers zurück.
+    Nützlich um den richtigen faceindex für shell_body, draw_holes etc. zu finden.
+    
+    Gibt zurück:
+    - face_count: Anzahl der Flächen
+    - faces: Liste mit Details zu jeder Fläche (Index, Typ, Fläche, Zentroid)
+    
+    Face-Typen: Plane (flach), Cylinder, Cone, Sphere, Torus, etc.
+    """
+    try:
+        endpoint = f"{config.ENDPOINTS['faces_info']}?body_index={body_index}"
+        response = requests.get(endpoint, timeout=10)
+        return response.json()
+    except Exception as e:
+        logging.error("Get faces info failed: %s", e)
+        raise
+
+@mcp.tool()
+def execute_fusion_script(script: str):
+    """
+    Führe ein Python-Script direkt in Fusion 360 aus.
+    Das ist das mächtigste Tool - du kannst beliebigen Fusion 360 API Code ausführen.
+    
+    Verfügbare Variablen im Script:
+    - adsk: Das Autodesk Modul
+    - app: Die Fusion 360 Application
+    - ui: Das User Interface
+    - design: Das aktive Design
+    - rootComp: Die Root Component
+    - math: Das math Modul
+    - json: Das json Modul
+    
+    Beispiel Script:
+    ```python
+    # Erstelle eine Box
+    sketches = rootComp.sketches
+    xyPlane = rootComp.xYConstructionPlane
+    sketch = sketches.add(xyPlane)
+    sketch.sketchCurves.sketchLines.addTwoPointRectangle(
+        adsk.core.Point3D.create(0, 0, 0),
+        adsk.core.Point3D.create(5, 3, 0)
+    )
+    # Extrudiere
+    profile = sketch.profiles.item(0)
+    extrudes = rootComp.features.extrudeFeatures
+    ext = extrudes.addSimple(profile, adsk.core.ValueInput.createByReal(2), adsk.fusion.FeatureOperations.NewBodyFeatureOperation)
+    result = f"Created body: {ext.bodies.item(0).name}"
+    ```
+    
+    Setze eine Variable 'result' um einen Rückgabewert zu erhalten.
+    
+    Gibt zurück:
+    - success: True/False
+    - return_value: Wert der 'result' Variable (wenn gesetzt)
+    - stdout: Print-Ausgaben
+    - stderr: Fehlerausgaben
+    - error: Fehlermeldung (wenn fehlgeschlagen)
+    - error_type: Art des Fehlers (SyntaxError, RuntimeError, etc.)
+    - error_line: Zeilennummer des Fehlers
+    - traceback: Vollständiger Traceback
+    - model_state: Modellzustand nach Ausführung
+    """
+    try:
+        # Queue the script for execution
+        endpoint = config.ENDPOINTS["execute_script"]
+        headers = config.HEADERS
+        response = requests.post(endpoint, json={"script": script}, headers=headers, timeout=10)
+        
+        if response.status_code != 200:
+            return {"success": False, "error": f"Failed to queue script: {response.text}"}
+        
+        # Poll for result (script executes async in Fusion's main thread)
+        result_endpoint = config.ENDPOINTS["script_result"]
+        max_wait = 30  # Maximum wait time in seconds
+        poll_interval = 0.3  # Poll every 300ms
+        waited = 0
+        
+        while waited < max_wait:
+            time.sleep(poll_interval)
+            waited += poll_interval
+            
+            result_response = requests.get(result_endpoint, timeout=10)
+            if result_response.status_code == 200:
+                result = result_response.json()
+                # Check if execution completed (has success field)
+                if "success" in result:
+                    return result
+        
+        return {"success": False, "error": "Script execution timed out after 30 seconds"}
+        
+    except Exception as e:
+        logging.error("Execute fusion script failed: %s", e)
+        return {"success": False, "error": str(e), "traceback": traceback.format_exc()}
 
 @mcp.tool()
 def delete_all():

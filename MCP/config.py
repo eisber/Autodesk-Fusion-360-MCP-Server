@@ -7,7 +7,6 @@ BASE_URL = "http://localhost:5000"
 ENDPOINTS = {
     "holes": f"{BASE_URL}/holes",
     "destroy": f"{BASE_URL}/destroy",
-    "witzenmann": f"{BASE_URL}/Witzenmann",
     "spline": f"{BASE_URL}/spline",
     "sweep": f"{BASE_URL}/sweep",
     "undo": f"{BASE_URL}/undo",

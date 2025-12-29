@@ -1,0 +1,4 @@
+# Test requirements for Fusion 360 MCP Add-In
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-mock>=3.0.0

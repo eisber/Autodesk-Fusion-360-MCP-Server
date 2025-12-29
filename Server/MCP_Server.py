@@ -83,6 +83,27 @@ mcp = FastMCP("Fusion",
 
                 **DrawBox or DrawCylinder:**
                 - The specified coordinates are always the center of the body.
+
+                **Self-Validation Workflow:**
+                Use these tools to validate your work and catch errors early:
+                
+                1. **Before changes**: Call `create_snapshot("before_feature_x")` to save current state
+                2. **After changes**: Call `get_model_state()` to verify body/sketch counts
+                3. **Save tests**: Use `save_test(name, script, description)` to persist validation logic
+                4. **Run tests**: Use `run_all_tests()` to execute all tests in ONE efficient call
+                5. **On failure**: Use `restore_snapshot("before_feature_x")` to rollback
+                
+                **Writing Test Scripts:**
+                - Scripts run in Fusion with access to: adsk, app, ui, design, rootComp, math, json
+                - Use `assert_body_count(n)`, `assert_sketch_count(n)` for quick checks
+                - Use `assert_volume(body_index, expected_cm3, tolerance)` for geometry validation
+                - Set `result = "message"` to return a value from the test
+                - Example: `assert_body_count(2); result = "Has 2 bodies"`
+                
+                **Rollback Limitations (IMPORTANT):**
+                - `restore_snapshot` uses sequential undo - cannot skip forward
+                - Cannot restore if snapshot has MORE bodies than current state
+                - Only body_count/sketch_count are verified, not exact geometry
                 """
 
                 )
@@ -953,6 +974,163 @@ def loft(sketchcount: int):
         raise
 
 
+# =============================================================================
+# Testing and Validation Tools
+# =============================================================================
+
+from src.tools.testing import (
+    save_test as _save_test,
+    load_tests as _load_tests,
+    run_test as _run_test,
+    run_all_tests as _run_all_tests,
+    delete_test as _delete_test,
+    create_snapshot as _create_snapshot,
+    list_snapshots as _list_snapshots,
+    restore_snapshot as _restore_snapshot,
+    delete_snapshot as _delete_snapshot,
+)
+
+
+@mcp.tool()
+def save_test(name: str, script: str, description: str = ""):
+    """
+    Save a validation test to disk for the current Fusion project.
+    
+    Tests are persisted to ~/Desktop/Fusion_Tests/{project_name}/ and can be
+    run later to verify model state or validate assumptions.
+    
+    The script runs in Fusion 360 with access to:
+    - adsk, app, ui, design, rootComp, math, json
+    - Assertion helpers: assert_body_count(n), assert_sketch_count(n), 
+      assert_volume(body_idx, cm3, tolerance), assert_bounding_box(...)
+    
+    Set 'result' variable in script to return a value.
+    
+    Example script:
+        assert_body_count(2)
+        body = rootComp.bRepBodies.item(0)
+        assert body.volume > 5, "Body too small"
+        result = "Validation passed"
+    
+    Args:
+        name: Test name (alphanumeric/underscores)
+        script: Python validation script
+        description: What this test validates
+    """
+    return _save_test(name, script, description)
+
+
+@mcp.tool()
+def load_tests():
+    """
+    List all saved tests for the current Fusion project.
+    
+    Returns test names, descriptions, and file paths.
+    Use this to see what tests are available before running them.
+    """
+    return _load_tests()
+
+
+@mcp.tool()
+def run_test(name: str):
+    """
+    Run a single saved validation test by name.
+    
+    Executes the test script in Fusion 360 and returns:
+    - passed: True/False
+    - return_value: Script's 'result' variable
+    - error: Error details if failed
+    - model_state: Current model state after test
+    
+    Args:
+        name: Name of test to run (from load_tests)
+    """
+    return _run_test(name)
+
+
+@mcp.tool()
+def run_all_tests():
+    """
+    Run ALL saved tests for the current Fusion project in one call.
+    
+    This is the most efficient way to validate - one tool call runs
+    all tests sequentially and returns a summary:
+    - total, passed, failed counts
+    - Individual results with timing
+    - Detailed errors for failed tests
+    
+    Use this after making changes to verify nothing broke.
+    """
+    return _run_all_tests()
+
+
+@mcp.tool()
+def delete_test(name: str):
+    """
+    Delete a saved test by name.
+    
+    Args:
+        name: Name of test to delete
+    """
+    return _delete_test(name)
+
+
+@mcp.tool()
+def create_snapshot(name: str):
+    """
+    Create a snapshot of the current model state.
+    
+    Captures body_count, sketch_count, volumes, and bounding boxes.
+    Use BEFORE making changes to enable rollback verification.
+    
+    Snapshots are saved to ~/Desktop/Fusion_Tests/{project_name}/snapshots/
+    
+    Args:
+        name: Name for this snapshot (alphanumeric/underscores)
+    """
+    return _create_snapshot(name)
+
+
+@mcp.tool()
+def list_snapshots():
+    """
+    List all snapshots for the current Fusion project.
+    
+    Returns snapshot names, creation times, and body/sketch counts.
+    """
+    return _list_snapshots()
+
+
+@mcp.tool()
+def restore_snapshot(name: str, max_undo_steps: int = 50):
+    """
+    Attempt to restore model to a previous snapshot using undo.
+    
+    **WARNING - LIMITATIONS:**
+    - Fusion undo is sequential - undoes one operation at a time
+    - Cannot skip forward in history
+    - Cannot restore if snapshot requires MORE bodies/sketches
+    - Only verifies body_count and sketch_count match
+    - Geometry details may differ from original
+    
+    Use this to rollback after failed experiments.
+    
+    Args:
+        name: Snapshot name to restore
+        max_undo_steps: Maximum undo attempts (default 50)
+    """
+    return _restore_snapshot(name, max_undo_steps)
+
+
+@mcp.tool()
+def delete_snapshot(name: str):
+    """
+    Delete a snapshot by name.
+    
+    Args:
+        name: Snapshot name to delete
+    """
+    return _delete_snapshot(name)
 
 
 @mcp.prompt()

@@ -75,3 +75,12 @@ HEADERS = {
 REQUEST_TIMEOUT = 30
 SCRIPT_EXECUTION_TIMEOUT = 30
 SCRIPT_POLL_INTERVAL = 0.3
+
+# Test storage configuration
+# Tests and snapshots are stored per-project in this directory
+import os
+TEST_STORAGE_PATH = os.path.join(
+    os.environ.get('USERPROFILE', os.path.expanduser('~')),
+    'Desktop',
+    'Fusion_Tests'
+)

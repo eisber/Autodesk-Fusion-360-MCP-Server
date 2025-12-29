@@ -69,4 +69,25 @@ Take a moment after each tool call to think about the next step and review the p
 
 **DrawBox or DrawCylinder:**
 - The specified coordinates are always the center of the body.
+
+**Self-Validation Workflow:**
+Use these tools to validate your work and catch errors early:
+
+1. **Before changes**: Call `create_snapshot("before_feature_x")` to save current state
+2. **After changes**: Call `get_model_state()` to verify body/sketch counts
+3. **Save tests**: Use `save_test(name, script, description)` to persist validation logic
+4. **Run tests**: Use `run_all_tests()` to execute all tests in ONE efficient call
+5. **On failure**: Use `restore_snapshot("before_feature_x")` to rollback
+
+**Writing Test Scripts:**
+- Scripts run in Fusion with access to: adsk, app, ui, design, rootComp, math, json
+- Use `assert_body_count(n)`, `assert_sketch_count(n)` for quick checks
+- Use `assert_volume(body_index, expected_cm3, tolerance)` for geometry validation
+- Set `result = "message"` to return a value from the test
+- Example: `assert_body_count(2); result = "Has 2 bodies"`
+
+**Rollback Limitations (IMPORTANT):**
+- `restore_snapshot` uses sequential undo - cannot skip forward
+- Cannot restore if snapshot has MORE bodies than current state
+- Only body_count/sketch_count are verified, not exact geometry
 """

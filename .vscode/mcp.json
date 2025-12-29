@@ -3,7 +3,7 @@
     "fusion-mcp": {
       "type": "stdio",
       "command": "powershell",
-      "args": ["-Command", "& '${workspaceFolder}/venv/Scripts/Activate.ps1'; uv run python server.py --server_type stdio"],
+      "args": ["-Command", "& '${workspaceFolder}/venv/Scripts/Activate.ps1'; uv run python MCP_Server.py --server_type stdio"],
       "cwd": "${workspaceFolder}/Server"
     }
   }

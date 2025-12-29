@@ -51,6 +51,17 @@ from .validation import (
 from .scripting import (
     execute_fusion_script,
 )
+from .testing import (
+    save_test,
+    load_tests,
+    run_test,
+    run_all_tests,
+    delete_test,
+    create_snapshot,
+    list_snapshots,
+    restore_snapshot,
+    delete_snapshot,
+)
 
 __all__ = [
     # Geometry - 3D Primitives
@@ -98,4 +109,14 @@ __all__ = [
     "undo",
     # Scripting
     "execute_fusion_script",
+    # Testing
+    "save_test",
+    "load_tests",
+    "run_test",
+    "run_all_tests",
+    "delete_test",
+    "create_snapshot",
+    "list_snapshots",
+    "restore_snapshot",
+    "delete_snapshot",
 ]

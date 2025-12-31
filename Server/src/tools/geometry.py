@@ -303,12 +303,9 @@ def extrude(value: float, angle: float):
         angle: Taper angle in degrees
     """
     try:
-        import json
         endpoint = ENDPOINTS["extrude"]
-        data = {"value": value, "taperangle": angle}
-        data = json.dumps(data)
-        response = requests.post(endpoint, data, headers=HEADERS)
-        return response.json()
+        data = {"distance": value, "operation": angle}
+        return send_request(endpoint, data, HEADERS)
     except requests.RequestException as e:
         logging.error("Extrude failed: %s", e)
         raise

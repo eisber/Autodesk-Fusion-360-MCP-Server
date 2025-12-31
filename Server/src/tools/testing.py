@@ -163,17 +163,18 @@ def load_tests() -> dict:
         return {"success": False, "error": str(e), "tests": []}
 
 
-def run_test(name: str) -> dict:
+def run_tests(name: str = None) -> dict:
     """
-    Run a saved validation test by name.
+    Run validation tests for the current Fusion project.
     
-    Executes the test script in Fusion 360 and returns pass/fail status.
+    If name is provided, runs that specific test.
+    If name is omitted, runs ALL saved tests for the project.
     
     Args:
-        name: Name of the test to run (as saved with save_test)
+        name: Name of specific test to run (optional, omit to run all)
         
     Returns:
-        Dictionary with:
+        If running single test:
         - success: True if test passed, False if failed or error
         - test_name: Name of the test
         - passed: True/False based on script execution
@@ -182,7 +183,26 @@ def run_test(name: str) -> dict:
         - error: Error message if test failed
         - execution_time_ms: How long the test took
         - model_state: Model state after test execution
+        
+        If running all tests:
+        - success: True if all tests passed
+        - project_name: Current project name
+        - total: Total number of tests
+        - passed: Number of tests that passed
+        - failed: Number of tests that failed
+        - results: List of individual test results
+        - total_execution_time_ms: Total time for all tests
     """
+    # If no name provided, run all tests
+    if name is None:
+        return _run_all_tests_impl()
+    
+    # Otherwise run specific test
+    return _run_single_test_impl(name)
+
+
+def _run_single_test_impl(name: str) -> dict:
+    """Internal implementation for running a single test."""
     try:
         project_name = _get_project_name()
         test_dir = _get_test_dir(project_name)
@@ -246,23 +266,8 @@ def run_test(name: str) -> dict:
         }
 
 
-def run_all_tests() -> dict:
-    """
-    Run all saved tests for the current Fusion project.
-    
-    Executes each test sequentially and returns a summary of results.
-    This is efficient for batch validation - one tool call runs all tests.
-    
-    Returns:
-        Dictionary with:
-        - success: True if all tests passed
-        - project_name: Current project name
-        - total: Total number of tests
-        - passed: Number of tests that passed
-        - failed: Number of tests that failed
-        - results: List of individual test results (name, passed, error, execution_time_ms)
-        - total_execution_time_ms: Total time for all tests
-    """
+def _run_all_tests_impl() -> dict:
+    """Internal implementation for running all tests."""
     try:
         project_name = _get_project_name()
         test_dir = _get_test_dir(project_name)
@@ -290,7 +295,7 @@ def run_all_tests() -> dict:
         
         for filename in sorted(test_files):
             test_name = filename[:-5]  # Remove .json
-            result = run_test(test_name)
+            result = _run_single_test_impl(test_name)
             
             test_result = {
                 "name": test_name,

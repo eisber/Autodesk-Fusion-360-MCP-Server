@@ -54,13 +54,48 @@ from .scripting import (
 from .testing import (
     save_test,
     load_tests,
-    run_test,
-    run_all_tests,
+    run_tests,
     delete_test,
     create_snapshot,
     list_snapshots,
     restore_snapshot,
     delete_snapshot,
+)
+from .measurement import (
+    measure_distance,
+    measure_angle,
+    measure_area,
+    measure_volume,
+    measure_edge_length,
+    measure_body_properties,
+    measure_point_to_point,
+    get_edges_info,
+    get_vertices_info,
+)
+from .parametric import (
+    # User Parameters
+    create_parameter,
+    delete_parameter,
+    # Sketch Analysis
+    get_sketch_info,
+    get_sketch_constraints,
+    get_sketch_dimensions,
+    # Interference Detection
+    check_interference,
+    # Timeline / Feature History
+    get_timeline_info,
+    rollback_to_feature,
+    rollback_to_end,
+    suppress_feature,
+    # Mass Properties
+    get_mass_properties,
+    # Construction Geometry
+    create_offset_plane,
+    create_plane_at_angle,
+    create_midplane,
+    create_construction_axis,
+    create_construction_point,
+    list_construction_geometry,
 )
 
 __all__ = [
@@ -112,11 +147,43 @@ __all__ = [
     # Testing
     "save_test",
     "load_tests",
-    "run_test",
-    "run_all_tests",
+    "run_tests",
     "delete_test",
     "create_snapshot",
     "list_snapshots",
     "restore_snapshot",
     "delete_snapshot",
+    # Measurement
+    "measure_distance",
+    "measure_angle",
+    "measure_area",
+    "measure_volume",
+    "measure_edge_length",
+    "measure_body_properties",
+    "measure_point_to_point",
+    "get_edges_info",
+    "get_vertices_info",
+    # Parametric - User Parameters
+    "create_parameter",
+    "delete_parameter",
+    # Parametric - Sketch Analysis
+    "get_sketch_info",
+    "get_sketch_constraints",
+    "get_sketch_dimensions",
+    # Parametric - Interference Detection
+    "check_interference",
+    # Parametric - Timeline / Feature History
+    "get_timeline_info",
+    "rollback_to_feature",
+    "rollback_to_end",
+    "suppress_feature",
+    # Parametric - Mass Properties
+    "get_mass_properties",
+    # Parametric - Construction Geometry
+    "create_offset_plane",
+    "create_plane_at_angle",
+    "create_midplane",
+    "create_construction_axis",
+    "create_construction_point",
+    "list_construction_geometry",
 ]

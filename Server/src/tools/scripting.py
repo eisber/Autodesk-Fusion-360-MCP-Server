@@ -14,7 +14,6 @@ from ..config import ENDPOINTS, HEADERS, SCRIPT_EXECUTION_TIMEOUT, SCRIPT_POLL_I
 def execute_fusion_script(script: str):
     """
     Execute a Python script directly in Fusion 360.
-    
     This is the most powerful tool - you can execute arbitrary Fusion 360 API code.
     
     Available variables in the script:
@@ -26,27 +25,40 @@ def execute_fusion_script(script: str):
     - math: The math module
     - json: The json module
     
-    Set a variable 'result' to return a value from the script.
+    Example Script:
+    ```python
+    # Create a box
+    sketches = rootComp.sketches
+    xyPlane = rootComp.xYConstructionPlane
+    sketch = sketches.add(xyPlane)
+    sketch.sketchCurves.sketchLines.addTwoPointRectangle(
+        adsk.core.Point3D.create(0, 0, 0),
+        adsk.core.Point3D.create(5, 3, 0)
+    )
+    # Extrude
+    profile = sketch.profiles.item(0)
+    extrudes = rootComp.features.extrudeFeatures
+    ext = extrudes.addSimple(profile, adsk.core.ValueInput.createByReal(2), adsk.fusion.FeatureOperations.NewBodyFeatureOperation)
+    result = f"Created body: {ext.bodies.item(0).name}"
+    ```
     
-    Args:
-        script: Python code to execute
-        
+    Set a variable 'result' to return a value.
+    
     Returns:
-        Dictionary with:
-        - success: True/False
-        - return_value: Value of the 'result' variable (if set)
-        - stdout: Print outputs
-        - stderr: Error outputs
-        - error: Error message (if failed)
-        - error_type: Type of error (SyntaxError, RuntimeError, etc.)
-        - error_line: Line number of error
-        - traceback: Full traceback
-        - model_state: Model state after execution
+    - success: True/False
+    - return_value: Value of the 'result' variable (if set)
+    - stdout: Print outputs
+    - stderr: Error outputs
+    - error: Error message (if failed)
+    - error_type: Type of error (SyntaxError, RuntimeError, etc.)
+    - error_line: Line number of error
+    - traceback: Full traceback
+    - model_state: Model state after execution
     """
     try:
         # Queue the script for execution
         endpoint = ENDPOINTS["execute_script"]
-        response = requests.post(endpoint, json={"script": script}, headers=HEADERS, timeout=10)
+        response = requests.post(endpoint, json={"command": "execute_script", "script": script}, headers=HEADERS, timeout=10)
         
         if response.status_code != 200:
             return {"success": False, "error": f"Failed to queue script: {response.text}"}

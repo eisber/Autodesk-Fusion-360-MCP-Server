@@ -109,11 +109,11 @@ class TestLoadTests:
             assert result["tests"][0]["name"] == "my_test"
 
 
-class TestRunTest:
-    """Tests for run_test function."""
+class TestRunTests:
+    """Tests for run_tests function."""
 
     @patch('src.tools.testing.requests.get')
-    def test_run_test_not_found(self, mock_get, tmp_path):
+    def test_run_tests_single_not_found(self, mock_get, tmp_path):
         """Test running a non-existent test."""
         with patch('src.tools.testing.TEST_STORAGE_PATH', str(tmp_path)):
             mock_get.return_value = MagicMock(
@@ -121,17 +121,17 @@ class TestRunTest:
                 json=lambda: {"design_name": "TestProject"}
             )
             
-            from src.tools.testing import run_test
+            from src.tools.testing import run_tests
             
-            result = run_test("nonexistent_test")
+            result = run_tests("nonexistent_test")
             assert result["success"] is False
             assert result["passed"] is False
             assert "not found" in result["error"]
 
     @patch('src.tools.testing.requests.get')
     @patch('src.tools.scripting.execute_fusion_script')
-    def test_run_test_success(self, mock_exec, mock_get, tmp_path):
-        """Test running a test successfully."""
+    def test_run_tests_single_success(self, mock_exec, mock_get, tmp_path):
+        """Test running a single test successfully."""
         with patch('src.tools.testing.TEST_STORAGE_PATH', str(tmp_path)):
             mock_get.return_value = MagicMock(
                 status_code=200,
@@ -155,19 +155,15 @@ class TestRunTest:
                 "model_state": {"body_count": 1}
             }
             
-            from src.tools.testing import run_test
+            from src.tools.testing import run_tests
             
-            result = run_test("my_test")
+            result = run_tests("my_test")
             assert result["success"] is True
             assert result["passed"] is True
             assert result["return_value"] == "ok"
 
-
-class TestRunAllTests:
-    """Tests for run_all_tests function."""
-
     @patch('src.tools.testing.requests.get')
-    def test_run_all_tests_empty(self, mock_get, tmp_path):
+    def test_run_tests_all_empty(self, mock_get, tmp_path):
         """Test running all tests when none exist."""
         with patch('src.tools.testing.TEST_STORAGE_PATH', str(tmp_path)):
             mock_get.return_value = MagicMock(
@@ -175,9 +171,9 @@ class TestRunAllTests:
                 json=lambda: {"design_name": "TestProject"}
             )
             
-            from src.tools.testing import run_all_tests
+            from src.tools.testing import run_tests
             
-            result = run_all_tests()
+            result = run_tests()
             assert result["success"] is True
             assert result["total"] == 0
             assert result["passed"] == 0
@@ -185,7 +181,7 @@ class TestRunAllTests:
 
     @patch('src.tools.testing.requests.get')
     @patch('src.tools.scripting.execute_fusion_script')
-    def test_run_all_tests_mixed_results(self, mock_exec, mock_get, tmp_path):
+    def test_run_tests_all_mixed_results(self, mock_exec, mock_get, tmp_path):
         """Test running all tests with mixed pass/fail."""
         with patch('src.tools.testing.TEST_STORAGE_PATH', str(tmp_path)):
             mock_get.return_value = MagicMock(
@@ -214,9 +210,9 @@ class TestRunAllTests:
             
             mock_exec.side_effect = mock_execute
             
-            from src.tools.testing import run_all_tests
+            from src.tools.testing import run_tests
             
-            result = run_all_tests()
+            result = run_tests()
             assert result["total"] == 2
             assert result["passed"] == 1
             assert result["failed"] == 1

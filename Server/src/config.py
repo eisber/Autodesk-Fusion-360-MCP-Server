@@ -64,6 +64,47 @@ ENDPOINTS = {
     "undo": f"{BASE_URL}/undo",
     "delete_everything": f"{BASE_URL}/delete_everything",
     "destroy": f"{BASE_URL}/destroy",
+    
+    # Measurement
+    "measure_distance": f"{BASE_URL}/measure_distance",
+    "measure_angle": f"{BASE_URL}/measure_angle",
+    "measure_area": f"{BASE_URL}/measure_area",
+    "measure_volume": f"{BASE_URL}/measure_volume",
+    "measure_edge_length": f"{BASE_URL}/measure_edge_length",
+    "measure_body_properties": f"{BASE_URL}/measure_body_properties",
+    "measure_point_to_point": f"{BASE_URL}/measure_point_to_point",
+    "edges_info": f"{BASE_URL}/edges_info",
+    "vertices_info": f"{BASE_URL}/vertices_info",
+    
+    # Parametric - User Parameters
+    "create_parameter": f"{BASE_URL}/create_parameter",
+    "delete_parameter": f"{BASE_URL}/delete_parameter",
+    
+    # Parametric - Sketch Analysis
+    "sketch_info": f"{BASE_URL}/sketch_info",
+    "sketch_constraints": f"{BASE_URL}/sketch_constraints",
+    "sketch_dimensions": f"{BASE_URL}/sketch_dimensions",
+    
+    # Parametric - Interference Detection
+    "check_interference": f"{BASE_URL}/check_interference",
+    "check_all_interferences": f"{BASE_URL}/check_all_interferences",
+    
+    # Parametric - Timeline / Feature History
+    "timeline_info": f"{BASE_URL}/timeline_info",
+    "rollback_to_feature": f"{BASE_URL}/rollback_to_feature",
+    "rollback_to_end": f"{BASE_URL}/rollback_to_end",
+    "suppress_feature": f"{BASE_URL}/suppress_feature",
+    
+    # Parametric - Mass Properties
+    "mass_properties": f"{BASE_URL}/mass_properties",
+    
+    # Parametric - Construction Geometry
+    "create_offset_plane": f"{BASE_URL}/create_offset_plane",
+    "create_plane_at_angle": f"{BASE_URL}/create_plane_at_angle",
+    "create_midplane": f"{BASE_URL}/create_midplane",
+    "create_construction_axis": f"{BASE_URL}/create_construction_axis",
+    "create_construction_point": f"{BASE_URL}/create_construction_point",
+    "list_construction_geometry": f"{BASE_URL}/list_construction_geometry",
 }
 
 # Request Headers

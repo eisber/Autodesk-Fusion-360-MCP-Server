@@ -188,9 +188,8 @@ heights z=1 to z=8 draw a 2D circle with radius 5.1 in the XY plane and extrude 
 Do not use boolean operations, leave the rings as separate bodies. Then round the edges with radius 0.2.
 Do it fast!!!!!!
 """,
-    
-    # Keep old German keys as aliases for backwards compatibility
-    "weinglas": """
+
+    "wineglass": """
 STEP 1: Draw Lines
 - Use Tool: draw_lines
 - Plane: XY
@@ -202,7 +201,7 @@ STEP 2: Revolve the Profile
 - The user selects the profile and axis in Fusion
 """,
 
-    "flansch": """
+    "flange": """
 STEP 1: 
 - Use Tool: draw_cylinder
 - Choose sensible dimensions (e.g., Radius: 5, Height: 1)
@@ -231,7 +230,7 @@ STEP 5:
 - Depth: +2 (positive value! Greater than cylinder height)
 """,
 
-    "teil": """
+    "part": """
 STEP 1: 
 - Use Tool: draw_box
 - Width (width_value): "10"

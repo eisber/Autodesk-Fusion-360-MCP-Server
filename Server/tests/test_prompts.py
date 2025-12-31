@@ -16,9 +16,9 @@ class TestPrompts:
         """Test that PROMPTS is not empty."""
         assert len(PROMPTS) > 0
 
-    def test_weinglas_prompt_exists(self):
-        """Test weinglas prompt exists."""
-        assert "weinglas" in PROMPTS
+    def test_wineglass_prompt_exists(self):
+        """Test wineglass prompt exists."""
+        assert "wineglass" in PROMPTS
 
     def test_magnet_prompt_exists(self):
         """Test magnet prompt exists."""
@@ -34,7 +34,7 @@ class TestGetPrompt:
 
     def test_get_existing_prompt(self):
         """Test getting an existing prompt."""
-        prompt = get_prompt("weinglas")
+        prompt = get_prompt("wineglass")
         assert prompt is not None
         assert len(prompt) > 0
 
@@ -45,5 +45,5 @@ class TestGetPrompt:
 
     def test_get_prompt_returns_string(self):
         """Test that get_prompt returns a string for existing prompts."""
-        prompt = get_prompt("weinglas")
+        prompt = get_prompt("wineglass")
         assert isinstance(prompt, str)

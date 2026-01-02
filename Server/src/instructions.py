@@ -97,4 +97,13 @@ Use these tools to validate your work and catch errors early:
 - `restore_snapshot` uses sequential undo - cannot skip forward
 - Cannot restore if snapshot has MORE bodies than current state
 - Only body_count/sketch_count are verified, not exact geometry
+
+## RULES
+Workflow Rules
+ALWAYS hide all other objects when working on one object, and show them again afterwards.
+ALWAYS add and execute unit tests after creating/modifying features.
+ALWAYS measure first, then build using the measured values (never hardcode absolute coordinates).
+
+For cut operations, prefer creating a tool body then Boolean cut - more reliable than direct cut extrusions.
+When sketch plane orientation is confusing, use XY plane with offset rather than XZ plane (which inverts Z).
 """

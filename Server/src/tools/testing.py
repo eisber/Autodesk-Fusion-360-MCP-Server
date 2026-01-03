@@ -15,6 +15,7 @@ import requests
 
 from ..client import send_request, send_get_request
 from ..config import ENDPOINTS, HEADERS, TEST_STORAGE_PATH
+from ..telemetry import tracked_tool
 
 
 def _get_project_name() -> str:
@@ -56,6 +57,7 @@ def _get_snapshot_dir(project_name: Optional[str] = None) -> str:
 # Test Management Tools
 # =============================================================================
 
+@tracked_tool
 def save_test(name: str, script: str, description: str = "") -> dict:
     """
     Save a validation test to disk for the current Fusion project.
@@ -119,6 +121,7 @@ def save_test(name: str, script: str, description: str = "") -> dict:
         return {"success": False, "error": str(e)}
 
 
+@tracked_tool
 def load_tests() -> dict:
     """
     List all saved tests for the current Fusion project.
@@ -163,6 +166,7 @@ def load_tests() -> dict:
         return {"success": False, "error": str(e), "tests": []}
 
 
+@tracked_tool
 def run_tests(name: str = None) -> dict:
     """
     Run validation tests for the current Fusion project.
@@ -338,6 +342,7 @@ def _run_all_tests_impl() -> dict:
         }
 
 
+@tracked_tool
 def delete_test(name: str) -> dict:
     """
     Delete a saved test by name.
@@ -377,6 +382,7 @@ def delete_test(name: str) -> dict:
 # Snapshot/Rollback Tools
 # =============================================================================
 
+@tracked_tool
 def create_snapshot(name: str) -> dict:
     """
     Create a snapshot of the current model state.
@@ -427,6 +433,7 @@ def create_snapshot(name: str) -> dict:
         return {"success": False, "error": str(e)}
 
 
+@tracked_tool
 def list_snapshots() -> dict:
     """
     List all snapshots for the current Fusion project.
@@ -468,6 +475,7 @@ def list_snapshots() -> dict:
         return {"success": False, "error": str(e), "snapshots": []}
 
 
+@tracked_tool
 def restore_snapshot(name: str, max_undo_steps: int = 50) -> dict:
     """
     Attempt to restore model to a previous snapshot state using undo.
@@ -544,7 +552,7 @@ def restore_snapshot(name: str, max_undo_steps: int = 50) -> dict:
         undo_count = 0
         
         for _ in range(max_undo_steps):
-            send_request(undo_endpoint, {}, {})
+            send_request(undo_endpoint, {"command": "undo"}, {})
             undo_count += 1
             
             # Small delay for Fusion to process
@@ -589,6 +597,7 @@ def restore_snapshot(name: str, max_undo_steps: int = 50) -> dict:
         return {"success": False, "error": str(e)}
 
 
+@tracked_tool
 def delete_snapshot(name: str) -> dict:
     """
     Delete a snapshot by name.

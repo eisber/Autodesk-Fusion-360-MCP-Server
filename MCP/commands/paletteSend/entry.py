@@ -7,7 +7,7 @@ from ... import config
 app = adsk.core.Application.get()
 ui = app.userInterface
 
-# TODO ********************* Change these names *********************
+# Command identity configuration
 CMD_ID = f'{config.COMPANY_NAME}_{config.ADDIN_NAME}_palette_send'
 CMD_NAME = 'Send to Palette'
 CMD_Description = 'Send some information to the palette'
@@ -16,7 +16,7 @@ IS_PROMOTED = False
 # Using "global" variables by referencing values from /config.py
 PALETTE_ID = config.sample_palette_id
 
-# TODO *** Define the location where the command button will be created. ***
+# Define the location where the command button will be created.
 # This is done by specifying the workspace, the tab, and the panel, and the 
 # command it will be inserted beside. Not providing the command to position it
 # will insert it at the end.
@@ -79,7 +79,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     # General logging for debug.
     futil.log(f'{CMD_NAME} Command Created Event')
 
-    # TODO Create the event handlers you will need for this instance of the command
+    # Create the event handlers for this command instance.
     futil.add_handler(args.command.execute, command_execute, local_handlers=local_handlers)
     futil.add_handler(args.command.inputChanged, command_input_changed, local_handlers=local_handlers)
     futil.add_handler(args.command.executePreview, command_preview, local_handlers=local_handlers)
@@ -89,7 +89,7 @@ def command_created(args: adsk.core.CommandCreatedEventArgs):
     # https://help.autodesk.com/view/fusion360/ENU/?contextId=CommandInputs
     inputs = args.command.commandInputs
 
-    # TODO ******************************** Define your UI Here ********************************
+    # Define the dialog UI for this command.
 
     # Simple text input box
     inputs.addTextBoxCommandInput('text_input', 'Text Message', 'Enter some text', 1, False)
@@ -108,7 +108,7 @@ def command_execute(args: adsk.core.CommandEventArgs):
 
     inputs = args.command.commandInputs
 
-    # TODO ******************************** Your code here ********************************
+    # Execute the command logic: send data to the palette.
 
     # Get a reference to your command's inputs
     text_input: adsk.core.TextBoxCommandInput = inputs.itemById('text_input')

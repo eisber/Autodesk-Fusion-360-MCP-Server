@@ -8,6 +8,8 @@ import adsk.core
 import adsk.fusion
 import traceback
 
+from lib.registry import task
+
 
 def get_model_parameters(design):
     """
@@ -342,6 +344,7 @@ def get_faces_info(design, body_index=0):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def set_parameter(design, ui, name, value):
     """
     Sets a parameter value by name.
@@ -360,6 +363,7 @@ def set_parameter(design, ui, name, value):
             ui.messageBox('Failed set_parameter:\n{}'.format(traceback.format_exc()))
 
 
+@task
 def undo(design, ui):
     """
     Executes an undo operation.
@@ -379,6 +383,7 @@ def undo(design, ui):
             ui.messageBox('Failed undo:\n{}'.format(traceback.format_exc()))
 
 
+@task
 def delete_all(design, ui):
     """
     Removes all bodies from the design.

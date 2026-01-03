@@ -1,96 +1,98 @@
-"""Tests for the validation tools module."""
+"""Tests for validation tools using @fusion_tool decorator."""
 
 import pytest
 from unittest.mock import patch, MagicMock
 
-from src.tools.validation import (
-    test_connection, get_model_state, get_faces_info, delete_all, undo
-)
 
+class TestValidationTools:
+    """Test suite for validation tools."""
 
-class TestTestConnection:
-    """Tests for test_connection function."""
-
-    @patch("src.tools.validation.send_request")
-    def test_connection_success(self, mock_send):
-        """Test successful connection."""
-        mock_send.return_value = {"status": "connected"}
+    @patch('src.tools.base.requests.post')
+    @patch('src.tools.base.get_telemetry')
+    def test_test_connection(self, mock_telemetry, mock_post):
+        """Test test_connection sends correct request."""
+        from src.tools.validation import test_connection
+        
+        mock_telemetry.return_value = MagicMock()
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"status": "connected"}
+        mock_post.return_value = mock_response
         
         result = test_connection()
         
         assert result["status"] == "connected"
+        mock_post.assert_called_once()
 
-
-class TestGetModelState:
-    """Tests for get_model_state function."""
-
-    @patch("src.tools.validation.send_get_request")
-    def test_get_model_state_basic(self, mock_get):
-        """Test getting model state."""
-        mock_get.return_value = {
-            "body_count": 3,
-            "sketch_count": 2,
+    @patch('src.tools.base.requests.get')
+    @patch('src.tools.base.get_telemetry')
+    def test_get_model_state(self, mock_telemetry, mock_get):
+        """Test get_model_state uses GET request."""
+        from src.tools.validation import get_model_state
+        
+        mock_telemetry.return_value = MagicMock()
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "body_count": 2,
+            "sketch_count": 1,
             "design_name": "TestDesign"
         }
+        mock_get.return_value = mock_response
         
         result = get_model_state()
         
-        assert result["body_count"] == 3
-        assert result["sketch_count"] == 2
+        assert result["body_count"] == 2
+        assert result["design_name"] == "TestDesign"
+        mock_get.assert_called_once()
 
-    @patch("src.tools.validation.send_get_request")
-    def test_get_model_state_empty(self, mock_get):
-        """Test model state for empty design."""
-        mock_get.return_value = {
-            "body_count": 0,
-            "sketch_count": 0,
-            "design_name": "Untitled"
-        }
+    @patch('src.tools.base.requests.get')
+    @patch('src.tools.base.get_telemetry')
+    def test_get_faces_info(self, mock_telemetry, mock_get):
+        """Test get_faces_info uses GET request."""
+        from src.tools.validation import get_faces_info
         
-        result = get_model_state()
-        
-        assert result["body_count"] == 0
-
-
-class TestGetFacesInfo:
-    """Tests for get_faces_info function."""
-
-    @patch("src.tools.validation.send_get_request")
-    def test_get_faces_info_basic(self, mock_get):
-        """Test getting faces info."""
-        mock_get.return_value = {
+        mock_telemetry.return_value = MagicMock()
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
             "face_count": 6,
-            "faces": [
-                {"index": 0, "type": "plane", "area": 100.0}
-            ]
+            "faces": []
         }
+        mock_get.return_value = mock_response
         
-        result = get_faces_info(0)
+        result = get_faces_info(body_index=0)
         
         assert result["face_count"] == 6
+        mock_get.assert_called_once()
 
-
-class TestDeleteAll:
-    """Tests for delete_all function."""
-
-    @patch("src.tools.validation.send_request")
-    def test_delete_all_success(self, mock_send):
-        """Test deleting all objects."""
-        mock_send.return_value = {"status": "deleted"}
+    @patch('src.tools.base.requests.post')
+    @patch('src.tools.base.get_telemetry')
+    def test_delete_all(self, mock_telemetry, mock_post):
+        """Test delete_all sends correct request."""
+        from src.tools.validation import delete_all
+        
+        mock_telemetry.return_value = MagicMock()
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"success": True}
+        mock_post.return_value = mock_response
         
         result = delete_all()
         
-        assert result["status"] == "deleted"
+        assert result["success"] is True
+        mock_post.assert_called_once()
+        call_kwargs = mock_post.call_args
+        assert call_kwargs[1]['json']['command'] == 'delete_all'
 
-
-class TestUndo:
-    """Tests for undo function."""
-
-    @patch("src.tools.validation.send_request")
-    def test_undo_success(self, mock_send):
-        """Test undo operation."""
-        mock_send.return_value = {"status": "ok"}
+    @patch('src.tools.base.requests.post')
+    @patch('src.tools.base.get_telemetry')
+    def test_undo(self, mock_telemetry, mock_post):
+        """Test undo sends correct request."""
+        from src.tools.validation import undo
+        
+        mock_telemetry.return_value = MagicMock()
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"success": True}
+        mock_post.return_value = mock_response
         
         result = undo()
         
-        assert result["status"] == "ok"
+        assert result["success"] is True
+        mock_post.assert_called_once()

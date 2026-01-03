@@ -5,8 +5,22 @@ to the appropriate handlers. Replaces boilerplate if/elif chains.
 """
 
 import json
+import os
+import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
 import urllib.parse
+
+# Debug logging
+_THIS_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_DEBUG_LOG = os.path.join(_THIS_DIR, "mcp_debug.log")
+
+def _log_debug(msg):
+    """Write debug message to log file."""
+    try:
+        with open(_DEBUG_LOG, "a") as f:
+            f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - [HTTP] {msg}\n")
+    except:
+        pass
 
 
 class RouteRegistry:
@@ -67,6 +81,7 @@ def create_handler_class(design_getter, task_queue, result_queue, script_result_
     class MCPHandler(BaseHTTPRequestHandler):
         def send_json(self, data, status=200):
             """Helper to send JSON response."""
+            _log_debug(f"  Sending JSON response (status={status}): {str(data)[:200]}...")
             self.send_response(status)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -112,25 +127,36 @@ def create_handler_class(design_getter, task_queue, result_queue, script_result_
                 )
         
         def do_GET(self):
+            _log_debug(f"GET request: {self.path}")
             try:
                 handler, matched_path = routes.match_route(routes.get_routes, self.path)
+                _log_debug(f"  Matched handler: {handler}, path: {matched_path}")
                 if handler:
                     handler(self, design_getter())
+                    _log_debug(f"  GET completed successfully")
                 else:
+                    _log_debug(f"  404 Not Found")
                     self.send_error(404, 'Not Found')
             except Exception as e:
+                _log_debug(f"  GET error: {e}")
                 self.send_error(500, str(e))
         
         def do_POST(self):
+            _log_debug(f"POST request: {self.path}")
             try:
                 path = self.path.split('?')[0]
                 handler, matched_path = routes.match_route(routes.post_routes, path)
+                _log_debug(f"  Matched handler: {handler}, path: {matched_path}")
                 if handler:
                     data = self.get_json_body()
+                    _log_debug(f"  Request data keys: {list(data.keys()) if data else 'empty'}")
                     handler(self, design_getter(), data)
+                    _log_debug(f"  POST completed successfully")
                 else:
+                    _log_debug(f"  404 Not Found")
                     self.send_error(404, 'Not Found')
             except Exception as e:
+                _log_debug(f"  POST error: {e}")
                 self.send_error(500, str(e))
     
     return MCPHandler

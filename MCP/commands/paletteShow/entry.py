@@ -8,7 +8,7 @@ from datetime import datetime
 app = adsk.core.Application.get()
 ui = app.userInterface
 
-# TODO ********************* Change these names *********************
+# Command identity configuration
 CMD_ID = f'{config.COMPANY_NAME}_{config.ADDIN_NAME}_PalleteShow'
 CMD_NAME = 'Show My Palette'
 CMD_Description = 'A Fusion Add-in Palette'
@@ -28,7 +28,7 @@ PALETTE_URL = PALETTE_URL.replace('\\', '/')
 # Set a default docking behavior for the palette
 PALETTE_DOCKING = adsk.core.PaletteDockingStates.PaletteDockStateRight
 
-# TODO *** Define the location where the command button will be created. ***
+# Define the location where the command button will be created.
 # This is done by specifying the workspace, the tab, and the panel, and the 
 # command it will be inserted beside. Not providing the command to position it
 # will insert it at the end.
@@ -167,7 +167,8 @@ def palette_incoming(html_args: adsk.core.HTMLEventArgs):
     log_msg += f"Data: {message_data}"
     futil.log(log_msg, adsk.core.LogLevels.InfoLogLevel)
 
-    # TODO ******** Your palette reaction code here ********
+    # Handle incoming messages from palette HTML/JavaScript.
+    # Add custom message handlers here based on message_action.
 
     # Read message sent from palette javascript and react appropriately.
     if message_action == 'messageFromPalette':

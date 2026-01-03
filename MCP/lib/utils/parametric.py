@@ -9,11 +9,14 @@ import adsk.fusion
 import traceback
 import math
 
+from lib.registry import task
+
 
 # =============================================================================
 # User Parameters
 # =============================================================================
 
+@task
 def create_user_parameter(design, name, value, unit="mm", comment=""):
     """Create a new user parameter in the design.
     
@@ -55,6 +58,7 @@ def create_user_parameter(design, name, value, unit="mm", comment=""):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def delete_user_parameter(design, name):
     """Delete a user parameter from the design.
     
@@ -88,6 +92,7 @@ def delete_user_parameter(design, name):
 # Sketch Analysis
 # =============================================================================
 
+@task
 def get_sketch_info(design, sketch_index=-1):
     """Get detailed information about a sketch.
     
@@ -175,6 +180,7 @@ def get_sketch_info(design, sketch_index=-1):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def get_sketch_constraints(design, sketch_index=-1):
     """Get all geometric constraints in a sketch.
     
@@ -220,6 +226,7 @@ def get_sketch_constraints(design, sketch_index=-1):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def get_sketch_dimensions(design, sketch_index=-1):
     """Get all dimensions in a sketch.
     
@@ -275,6 +282,7 @@ def get_sketch_dimensions(design, sketch_index=-1):
 # Interference Check
 # =============================================================================
 
+@task
 def check_interference(design, body1_index=0, body2_index=1):
     """Check for interference between two bodies.
     
@@ -328,6 +336,7 @@ def check_interference(design, body1_index=0, body2_index=1):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def check_all_interferences(design):
     """Check for interference between all bodies.
     
@@ -389,6 +398,7 @@ def check_all_interferences(design):
 # Timeline Management
 # =============================================================================
 
+@task
 def get_timeline_info(design):
     """Get information about the design timeline.
     
@@ -434,6 +444,7 @@ def get_timeline_info(design):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def rollback_to_feature(design, feature_index):
     """Roll back the timeline to a specific feature.
     
@@ -465,6 +476,7 @@ def rollback_to_feature(design, feature_index):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def rollback_to_end(design):
     """Roll the timeline forward to the end.
     
@@ -489,6 +501,7 @@ def rollback_to_end(design):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def suppress_feature(design, feature_index, suppress=True):
     """Suppress or unsuppress a feature in the timeline.
     
@@ -525,6 +538,7 @@ def suppress_feature(design, feature_index, suppress=True):
 # Mass Properties
 # =============================================================================
 
+@task
 def get_mass_properties(design, body_index=0, material_density=None):
     """Get mass properties of a body.
     
@@ -581,6 +595,7 @@ def get_mass_properties(design, body_index=0, material_density=None):
 # Construction Geometry
 # =============================================================================
 
+@task
 def create_offset_plane(design, offset, base_plane="XY"):
     """Create a construction plane offset from a base plane.
     
@@ -622,6 +637,7 @@ def create_offset_plane(design, offset, base_plane="XY"):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def create_plane_at_angle(design, angle, base_plane="XY", axis="X"):
     """Create a construction plane at an angle to a base plane.
     
@@ -673,6 +689,7 @@ def create_plane_at_angle(design, angle, base_plane="XY", axis="X"):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def create_midplane(design, body_index, face1_index, face2_index):
     """Create a construction plane midway between two faces.
     
@@ -720,6 +737,7 @@ def create_midplane(design, body_index, face1_index, face2_index):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def create_construction_axis(design, axis_type, body_index=0, edge_index=0, 
                              face_index=0, point1=None, point2=None):
     """Create a construction axis.
@@ -779,6 +797,7 @@ def create_construction_axis(design, axis_type, body_index=0, edge_index=0,
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def create_construction_point(design, point_type, x=0, y=0, z=0, 
                               body_index=0, vertex_index=0, edge_index=0):
     """Create a construction point.
@@ -843,6 +862,7 @@ def create_construction_point(design, point_type, x=0, y=0, z=0,
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def list_construction_geometry(design):
     """List all construction geometry in the design.
     

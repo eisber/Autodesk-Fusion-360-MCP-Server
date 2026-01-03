@@ -2,20 +2,18 @@
 
 Contains functions for advanced parametric design: parameters, sketches, 
 interference detection, timeline, mass properties, and construction geometry.
+Uses @fusion_tool decorator for automatic HTTP handling and telemetry.
 """
 
-import logging
-import requests
-
-from ..client import send_request, send_get_request
-from ..config import ENDPOINTS, HEADERS
+from .base import fusion_tool
 
 
 # =============================================================================
 # User Parameters
 # =============================================================================
 
-def create_parameter(name: str, value: str, unit: str = "mm", comment: str = ""):
+@fusion_tool
+def create_user_parameter(name: str, value: str, unit: str = "mm", comment: str = ""):
     """
     Create a new user parameter in the design.
     
@@ -32,21 +30,10 @@ def create_parameter(name: str, value: str, unit: str = "mm", comment: str = "")
         - value: Evaluated value
         - expression: The expression used
     """
-    try:
-        endpoint = ENDPOINTS["create_parameter"]
-        data = {
-            "name": name,
-            "value": value,
-            "unit": unit,
-            "comment": comment,
-        }
-        return send_request(endpoint, data, HEADERS)
-    except requests.RequestException as e:
-        logging.error("Create parameter failed: %s", e)
-        raise
 
 
-def delete_parameter(name: str):
+@fusion_tool
+def delete_user_parameter(name: str):
     """
     Delete a user parameter from the design.
     
@@ -58,19 +45,13 @@ def delete_parameter(name: str):
         - success: True/False
         - message: Status message
     """
-    try:
-        endpoint = ENDPOINTS["delete_parameter"]
-        data = {"name": name}
-        return send_request(endpoint, data, HEADERS)
-    except requests.RequestException as e:
-        logging.error("Delete parameter failed: %s", e)
-        raise
 
 
 # =============================================================================
 # Sketch Analysis
 # =============================================================================
 
+@fusion_tool(method="GET")
 def get_sketch_info(sketch_index: int = -1):
     """
     Get detailed information about a sketch including geometry, constraints, and profiles.
@@ -89,14 +70,9 @@ def get_sketch_info(sketch_index: int = -1):
         - dimensions: List of sketch dimensions with values
         - points: List of sketch points
     """
-    try:
-        endpoint = f"{ENDPOINTS['sketch_info']}?sketch_index={sketch_index}"
-        return send_get_request(endpoint)
-    except requests.RequestException as e:
-        logging.error("Get sketch info failed: %s", e)
-        raise
 
 
+@fusion_tool(method="GET")
 def get_sketch_constraints(sketch_index: int = -1):
     """
     Get all geometric constraints in a sketch.
@@ -109,14 +85,9 @@ def get_sketch_constraints(sketch_index: int = -1):
         - constraint_count: Number of constraints
         - constraints: List of constraints with type and referenced entities
     """
-    try:
-        endpoint = f"{ENDPOINTS['sketch_constraints']}?sketch_index={sketch_index}"
-        return send_get_request(endpoint)
-    except requests.RequestException as e:
-        logging.error("Get sketch constraints failed: %s", e)
-        raise
 
 
+@fusion_tool(method="GET")
 def get_sketch_dimensions(sketch_index: int = -1):
     """
     Get all dimensions in a sketch.
@@ -129,63 +100,46 @@ def get_sketch_dimensions(sketch_index: int = -1):
         - dimension_count: Number of dimensions
         - dimensions: List of dimensions with name, value, and expression
     """
-    try:
-        endpoint = f"{ENDPOINTS['sketch_dimensions']}?sketch_index={sketch_index}"
-        return send_get_request(endpoint)
-    except requests.RequestException as e:
-        logging.error("Get sketch dimensions failed: %s", e)
-        raise
 
 
 # =============================================================================
 # Interference Detection
 # =============================================================================
 
-def check_interference(body1_index: int = None, body2_index: int = None):
+@fusion_tool
+def check_interference(body1_index: int, body2_index: int):
     """
-    Check for interference (collision) between bodies.
-    
-    If body indices are provided, checks between those two specific bodies.
-    If no indices are provided, checks all bodies against each other.
+    Check for interference (collision) between two specific bodies.
     
     Args:
-        body1_index: Index of first body (optional, omit to check all)
-        body2_index: Index of second body (optional, omit to check all)
+        body1_index: Index of first body
+        body2_index: Index of second body
         
     Returns:
-        If checking specific bodies:
         - has_interference: True if bodies intersect
         - interference_volume_cm3: Volume of interference region (if any)
         - body1_name: Name of first body
         - body2_name: Name of second body
-        
-        If checking all bodies:
+    """
+
+
+@fusion_tool(method="GET")
+def check_all_interferences():
+    """
+    Check all bodies for interference with each other.
+    
+    Returns:
         - total_bodies: Number of bodies checked
         - interference_count: Number of interfering pairs
         - interferences: List of interfering body pairs with volumes
     """
-    try:
-        # If both indices provided, check specific pair
-        if body1_index is not None and body2_index is not None:
-            endpoint = ENDPOINTS["check_interference"]
-            data = {
-                "body1_index": body1_index,
-                "body2_index": body2_index,
-            }
-            return send_request(endpoint, data, HEADERS)
-        else:
-            # Check all bodies
-            endpoint = ENDPOINTS["check_all_interferences"]
-            return send_get_request(endpoint)
-    except requests.RequestException as e:
-        logging.error("Check interference failed: %s", e)
-        raise
 
 
 # =============================================================================
 # Timeline / Feature History
 # =============================================================================
 
+@fusion_tool(method="GET")
 def get_timeline_info():
     """
     Get information about the design timeline (feature history).
@@ -196,14 +150,9 @@ def get_timeline_info():
         - current_position: Current rollback position
         - features: List of features with name, type, suppressed state, and index
     """
-    try:
-        endpoint = ENDPOINTS["timeline_info"]
-        return send_get_request(endpoint)
-    except requests.RequestException as e:
-        logging.error("Get timeline info failed: %s", e)
-        raise
 
 
+@fusion_tool
 def rollback_to_feature(feature_index: int):
     """
     Roll back the timeline to a specific feature.
@@ -217,15 +166,9 @@ def rollback_to_feature(feature_index: int):
         - current_position: New timeline position
         - message: Status message
     """
-    try:
-        endpoint = ENDPOINTS["rollback_to_feature"]
-        data = {"feature_index": feature_index}
-        return send_request(endpoint, data, HEADERS)
-    except requests.RequestException as e:
-        logging.error("Rollback to feature failed: %s", e)
-        raise
 
 
+@fusion_tool
 def rollback_to_end():
     """
     Roll the timeline forward to the end (latest feature).
@@ -235,14 +178,9 @@ def rollback_to_end():
         - success: True/False
         - current_position: New timeline position
     """
-    try:
-        endpoint = ENDPOINTS["rollback_to_end"]
-        return send_request(endpoint, {}, HEADERS)
-    except requests.RequestException as e:
-        logging.error("Rollback to end failed: %s", e)
-        raise
 
 
+@fusion_tool
 def suppress_feature(feature_index: int, suppress: bool = True):
     """
     Suppress or unsuppress a feature in the timeline.
@@ -257,22 +195,13 @@ def suppress_feature(feature_index: int, suppress: bool = True):
         - feature_name: Name of the affected feature
         - is_suppressed: Current suppression state
     """
-    try:
-        endpoint = ENDPOINTS["suppress_feature"]
-        data = {
-            "feature_index": feature_index,
-            "suppress": suppress,
-        }
-        return send_request(endpoint, data, HEADERS)
-    except requests.RequestException as e:
-        logging.error("Suppress feature failed: %s", e)
-        raise
 
 
 # =============================================================================
 # Mass Properties
 # =============================================================================
 
+@fusion_tool
 def get_mass_properties(body_index: int = 0, material_density: float = None):
     """
     Get mass properties of a body including center of gravity and moments of inertia.
@@ -292,21 +221,13 @@ def get_mass_properties(body_index: int = 0, material_density: float = None):
         - principal_axes: Principal axes of inertia
         - radii_of_gyration: {kx, ky, kz} in cm
     """
-    try:
-        endpoint = ENDPOINTS["mass_properties"]
-        data = {"body_index": body_index}
-        if material_density is not None:
-            data["material_density"] = material_density
-        return send_request(endpoint, data, HEADERS)
-    except requests.RequestException as e:
-        logging.error("Get mass properties failed: %s", e)
-        raise
 
 
 # =============================================================================
 # Construction Geometry
 # =============================================================================
 
+@fusion_tool
 def create_offset_plane(offset: float, base_plane: str = "XY"):
     """
     Create a construction plane offset from a base plane.
@@ -320,18 +241,9 @@ def create_offset_plane(offset: float, base_plane: str = "XY"):
         - success: True/False
         - plane_name: Name of created construction plane
     """
-    try:
-        endpoint = ENDPOINTS["create_offset_plane"]
-        data = {
-            "offset": offset,
-            "base_plane": base_plane,
-        }
-        return send_request(endpoint, data, HEADERS)
-    except requests.RequestException as e:
-        logging.error("Create offset plane failed: %s", e)
-        raise
 
 
+@fusion_tool
 def create_plane_at_angle(angle: float, base_plane: str = "XY", axis: str = "X"):
     """
     Create a construction plane at an angle to a base plane.
@@ -346,19 +258,9 @@ def create_plane_at_angle(angle: float, base_plane: str = "XY", axis: str = "X")
         - success: True/False
         - plane_name: Name of created construction plane
     """
-    try:
-        endpoint = ENDPOINTS["create_plane_at_angle"]
-        data = {
-            "angle": angle,
-            "base_plane": base_plane,
-            "axis": axis,
-        }
-        return send_request(endpoint, data, HEADERS)
-    except requests.RequestException as e:
-        logging.error("Create plane at angle failed: %s", e)
-        raise
 
 
+@fusion_tool
 def create_midplane(body_index: int = 0, face1_index: int = 0, face2_index: int = 1):
     """
     Create a construction plane midway between two parallel faces.
@@ -374,19 +276,9 @@ def create_midplane(body_index: int = 0, face1_index: int = 0, face2_index: int 
         - plane_name: Name of created construction plane
         - offset: Distance from each face
     """
-    try:
-        endpoint = ENDPOINTS["create_midplane"]
-        data = {
-            "body_index": body_index,
-            "face1_index": face1_index,
-            "face2_index": face2_index,
-        }
-        return send_request(endpoint, data, HEADERS)
-    except requests.RequestException as e:
-        logging.error("Create midplane failed: %s", e)
-        raise
 
 
+@fusion_tool
 def create_construction_axis(axis_type: str, **kwargs):
     """
     Create a construction axis.
@@ -404,15 +296,9 @@ def create_construction_axis(axis_type: str, **kwargs):
         - success: True/False
         - axis_name: Name of created construction axis
     """
-    try:
-        endpoint = ENDPOINTS["create_construction_axis"]
-        data = {"axis_type": axis_type, **kwargs}
-        return send_request(endpoint, data, HEADERS)
-    except requests.RequestException as e:
-        logging.error("Create construction axis failed: %s", e)
-        raise
 
 
+@fusion_tool
 def create_construction_point(point_type: str, **kwargs):
     """
     Create a construction point.
@@ -431,15 +317,9 @@ def create_construction_point(point_type: str, **kwargs):
         - point_name: Name of created construction point
         - coordinates: [x, y, z] position
     """
-    try:
-        endpoint = ENDPOINTS["create_construction_point"]
-        data = {"point_type": point_type, **kwargs}
-        return send_request(endpoint, data, HEADERS)
-    except requests.RequestException as e:
-        logging.error("Create construction point failed: %s", e)
-        raise
 
 
+@fusion_tool(method="GET")
 def list_construction_geometry():
     """
     List all construction geometry in the design.
@@ -450,9 +330,3 @@ def list_construction_geometry():
         - axes: List of construction axes with name and direction
         - points: List of construction points with name and position
     """
-    try:
-        endpoint = ENDPOINTS["list_construction_geometry"]
-        return send_get_request(endpoint)
-    except requests.RequestException as e:
-        logging.error("List construction geometry failed: %s", e)
-        raise

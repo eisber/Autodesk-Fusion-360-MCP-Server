@@ -5,11 +5,13 @@ All implementation logic lives in src/tools/ modules.
 """
 
 import argparse
+import atexit
 from mcp.server.fastmcp import FastMCP
 
 from src.instructions import SYSTEM_INSTRUCTIONS
 from src.prompts import PROMPTS
 from src import tools
+from src.telemetry import get_telemetry
 
 
 # =============================================================================
@@ -20,142 +22,14 @@ mcp = FastMCP("Fusion", instructions=SYSTEM_INSTRUCTIONS)
 
 
 # =============================================================================
-# Register Tools - Geometry (DISABLED - use execute_fusion_script instead)
+# Auto-Register All Tools from __all__
 # =============================================================================
 
-# mcp.tool()(tools.draw_box)
-# mcp.tool()(tools.draw_cylinder)
-# mcp.tool()(tools.draw_sphere)
-# mcp.tool()(tools.draw2Dcircle)
-# mcp.tool()(tools.draw_lines)
-# mcp.tool()(tools.draw_one_line)
-# mcp.tool()(tools.draw_arc)
-# mcp.tool()(tools.draw_2d_rectangle)
-# mcp.tool()(tools.ellipsie)
-# mcp.tool()(tools.spline)
-# mcp.tool()(tools.draw_text)
-# mcp.tool()(tools.draw_holes)
-# mcp.tool()(tools.create_thread)
-
-# Extrusion Operations
-# mcp.tool()(tools.extrude)
-# mcp.tool()(tools.extrude_thin)
-# mcp.tool()(tools.cut_extrude)
-
-# 3D Operations
-# mcp.tool()(tools.loft)
-# mcp.tool()(tools.sweep)
-# mcp.tool()(tools.revolve)
-# mcp.tool()(tools.boolean_operation)
-# mcp.tool()(tools.shell_body)
-# mcp.tool()(tools.fillet_edges)
-
-
-# =============================================================================
-# Register Tools - Patterns & Transform
-# =============================================================================
-
-mcp.tool()(tools.circular_pattern)
-mcp.tool()(tools.rectangular_pattern)
-mcp.tool()(tools.move_latest_body)
-
-
-# =============================================================================
-# Register Tools - Parameters
-# =============================================================================
-
-mcp.tool()(tools.count)
-mcp.tool()(tools.list_parameters)
-mcp.tool()(tools.change_parameter)
-
-
-# =============================================================================
-# Register Tools - Export
-# =============================================================================
-
-mcp.tool()(tools.export_step)
-mcp.tool()(tools.export_stl)
-
-
-# =============================================================================
-# Register Tools - Validation & Utility
-# =============================================================================
-
-mcp.tool()(tools.test_connection)
-mcp.tool()(tools.get_model_state)
-mcp.tool()(tools.get_faces_info)
-mcp.tool()(tools.delete_all)
-mcp.tool()(tools.undo)
-
-
-# =============================================================================
-# Register Tools - Scripting
-# =============================================================================
-
-mcp.tool()(tools.execute_fusion_script)
-
-
-# =============================================================================
-# Register Tools - Testing & Snapshots
-# =============================================================================
-
-mcp.tool()(tools.save_test)
-mcp.tool()(tools.load_tests)
-mcp.tool()(tools.run_tests)
-mcp.tool()(tools.delete_test)
-mcp.tool()(tools.create_snapshot)
-mcp.tool()(tools.list_snapshots)
-mcp.tool()(tools.restore_snapshot)
-mcp.tool()(tools.delete_snapshot)
-
-
-# =============================================================================
-# Register Tools - Measurement
-# =============================================================================
-
-mcp.tool()(tools.measure_distance)
-mcp.tool()(tools.measure_angle)
-mcp.tool()(tools.measure_area)
-mcp.tool()(tools.measure_volume)
-mcp.tool()(tools.measure_edge_length)
-mcp.tool()(tools.measure_body_properties)
-mcp.tool()(tools.measure_point_to_point)
-mcp.tool()(tools.get_edges_info)
-mcp.tool()(tools.get_vertices_info)
-
-
-# =============================================================================
-# Register Tools - Parametric Modeling
-# =============================================================================
-
-# User Parameters
-mcp.tool()(tools.create_parameter)
-mcp.tool()(tools.delete_parameter)
-
-# Sketch Analysis
-mcp.tool()(tools.get_sketch_info)
-mcp.tool()(tools.get_sketch_constraints)
-mcp.tool()(tools.get_sketch_dimensions)
-
-# Interference Detection
-mcp.tool()(tools.check_interference)
-
-# Timeline / Feature History
-mcp.tool()(tools.get_timeline_info)
-mcp.tool()(tools.rollback_to_feature)
-mcp.tool()(tools.rollback_to_end)
-mcp.tool()(tools.suppress_feature)
-
-# Mass Properties
-mcp.tool()(tools.get_mass_properties)
-
-# Construction Geometry
-mcp.tool()(tools.create_offset_plane)
-mcp.tool()(tools.create_plane_at_angle)
-mcp.tool()(tools.create_midplane)
-mcp.tool()(tools.create_construction_axis)
-mcp.tool()(tools.create_construction_point)
-mcp.tool()(tools.list_construction_geometry)
+# Register all tools from __all__
+for tool_name in tools.__all__:
+    tool_func = getattr(tools, tool_name, None)
+    if tool_func is not None and callable(tool_func):
+        mcp.tool()(tool_func)
 
 
 # =============================================================================
@@ -172,6 +46,27 @@ for name, content in PROMPTS.items():
 # Entry Point
 # =============================================================================
 
+TELEMETRY_WARNING = """
+================================================================================
+                          TELEMETRY NOTICE
+================================================================================
+  This MCP Server collects anonymous usage data to improve the tool.
+
+  What we collect:
+    - Tool names and success/failure rates
+    - Error types (for debugging)
+    - Sanitized parameters (no file paths, scripts, or personal data)
+
+  What we DON'T collect:
+    - File paths or model data
+    - Script contents
+    - Personal information
+
+  To disable: set environment variable FUSION_MCP_TELEMETRY=off
+  Or use the configure_telemetry("off") tool
+================================================================================
+"""
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fusion 360 MCP Server")
     parser.add_argument(
@@ -182,5 +77,16 @@ if __name__ == "__main__":
         help="Transport type for MCP server"
     )
     args = parser.parse_args()
+    
+    # Initialize telemetry and track session
+    telemetry = get_telemetry()
+    
+    # Show telemetry warning if enabled (only for non-stdio to avoid protocol issues)
+    if telemetry.enabled and args.server_type != "stdio":
+        print(TELEMETRY_WARNING, flush=True)
+    
+    telemetry.track_session_start()
+    atexit.register(telemetry.track_session_end)
+    atexit.register(telemetry.flush)
     
     mcp.run(transport=args.server_type)

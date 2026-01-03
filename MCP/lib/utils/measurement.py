@@ -9,6 +9,8 @@ import adsk.fusion
 import traceback
 import math
 
+from lib.registry import task
+
 
 def get_entity_from_body(design, entity_type, entity_index, body_index=0):
     """Helper function to get an entity (face, edge, vertex) from a body.
@@ -51,6 +53,7 @@ def get_entity_from_body(design, entity_type, entity_index, body_index=0):
         raise ValueError(f"Unknown entity type: {entity_type}")
 
 
+@task
 def measure_distance(design, entity1_type, entity1_index, entity2_type, entity2_index, body1_index=0, body2_index=0):
     """Measure the minimum distance between two entities.
     
@@ -88,6 +91,7 @@ def measure_distance(design, entity1_type, entity1_index, entity2_type, entity2_
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def measure_angle(design, entity1_type, entity1_index, entity2_type, entity2_index, body1_index=0, body2_index=0):
     """Measure the angle between two planar faces or linear edges.
     
@@ -155,6 +159,7 @@ def measure_angle(design, entity1_type, entity1_index, entity2_type, entity2_ind
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def measure_area(design, face_index, body_index=0):
     """Measure the area of a specific face.
     
@@ -185,6 +190,7 @@ def measure_area(design, face_index, body_index=0):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def measure_volume(design, body_index=0):
     """Measure the volume of a body.
     
@@ -217,6 +223,7 @@ def measure_volume(design, body_index=0):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def measure_edge_length(design, edge_index, body_index=0):
     """Measure the length of a specific edge.
     
@@ -257,6 +264,7 @@ def measure_edge_length(design, edge_index, body_index=0):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def measure_body_properties(design, body_index=0):
     """Get comprehensive physical properties of a body.
     
@@ -315,10 +323,12 @@ def measure_body_properties(design, body_index=0):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
-def measure_point_to_point(point1, point2):
+@task
+def measure_point_to_point(design, point1, point2):
     """Measure the distance between two specific 3D points.
     
     Args:
+        design: Fusion 360 design object (not used, for consistency)
         point1: [x, y, z] coordinates of first point (in cm)
         point2: [x, y, z] coordinates of second point (in cm)
         
@@ -340,6 +350,7 @@ def measure_point_to_point(point1, point2):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def get_edges_info(design, body_index=0):
     """Returns detailed edge information for a body.
     
@@ -393,6 +404,7 @@ def get_edges_info(design, body_index=0):
         return {"error": str(e), "traceback": traceback.format_exc()}
 
 
+@task
 def get_vertices_info(design, body_index=0):
     """Returns detailed vertex information for a body.
     

@@ -1,46 +1,19 @@
 """Tools module for Fusion 360 MCP Server.
 
-This module contains organized tool functions grouped by category.
+This module exports all tools available via MCP.
+SCRIPTABLE tools (geometry creation, features, patterns) have been removed -
+use execute_fusion_script instead.
+
+Tool categories:
+- Infrastructure: test_connection, get_model_state, undo, delete_all
+- Scripting: execute_fusion_script, cancel_fusion_task
+- Inspection: inspect_adsk_api, get_faces_info, get_edges_info, get_vertices_info
+- Measurement: measure_distance, measure_angle, measure_area, etc.
+- Parameters: list_parameters, set_parameter, create_user_parameter
+- Telemetry: get_telemetry_info, configure_telemetry
 """
 
-from .geometry import (
-    draw_box,
-    draw_cylinder,
-    draw_sphere,
-    draw2Dcircle,
-    draw_lines,
-    draw_one_line,
-    draw_arc,
-    draw_2d_rectangle,
-    ellipsie,
-    spline,
-    draw_text,
-    extrude,
-    extrude_thin,
-    cut_extrude,
-    loft,
-    sweep,
-    revolve,
-    boolean_operation,
-    shell_body,
-    fillet_edges,
-    draw_holes,
-    create_thread,
-)
-from .patterns import (
-    circular_pattern,
-    rectangular_pattern,
-    move_latest_body,
-)
-from .parameters import (
-    count,
-    list_parameters,
-    change_parameter,
-)
-from .export import (
-    export_step,
-    export_stl,
-)
+# Validation/Infrastructure tools
 from .validation import (
     test_connection,
     get_model_state,
@@ -48,19 +21,20 @@ from .validation import (
     delete_all,
     undo,
 )
+
+# Scripting tools (core functionality)
 from .scripting import (
     execute_fusion_script,
+    cancel_fusion_task,
 )
-from .testing import (
-    save_test,
-    load_tests,
-    run_tests,
-    delete_test,
-    create_snapshot,
-    list_snapshots,
-    restore_snapshot,
-    delete_snapshot,
+
+# Inspection tools
+from .inspection import (
+    inspect_adsk_api,
+    get_adsk_class_info,
 )
+
+# Measurement tools
 from .measurement import (
     measure_distance,
     measure_angle,
@@ -72,87 +46,55 @@ from .measurement import (
     get_edges_info,
     get_vertices_info,
 )
+
+# Parameter tools
+from .parameters import (
+    list_parameters,
+    set_parameter,
+)
+
+# Parametric tools (convenience)
 from .parametric import (
-    # User Parameters
-    create_parameter,
-    delete_parameter,
-    # Sketch Analysis
-    get_sketch_info,
-    get_sketch_constraints,
-    get_sketch_dimensions,
-    # Interference Detection
-    check_interference,
-    # Timeline / Feature History
-    get_timeline_info,
-    rollback_to_feature,
-    rollback_to_end,
-    suppress_feature,
-    # Mass Properties
-    get_mass_properties,
-    # Construction Geometry
-    create_offset_plane,
-    create_plane_at_angle,
-    create_midplane,
-    create_construction_axis,
-    create_construction_point,
+    create_user_parameter,
+    # Kept for potential future use but not in shared defs
+    check_all_interferences,
     list_construction_geometry,
+    suppress_feature,
+)
+
+# Telemetry tools
+from .telemetry_tools import (
+    get_telemetry_info,
+    configure_telemetry,
+)
+
+# Testing tools (kept for internal use, not in shared defs)
+from .testing import (
+    save_test,
+    load_tests,
+    run_tests,
+    delete_test,
+    create_snapshot,
+    list_snapshots,
+    restore_snapshot,
+    delete_snapshot,
 )
 
 __all__ = [
-    # Geometry - 3D Primitives
-    "draw_box",
-    "draw_cylinder",
-    "draw_sphere",
-    # Geometry - 2D Sketches
-    "draw2Dcircle",
-    "draw_lines",
-    "draw_one_line",
-    "draw_arc",
-    "draw_2d_rectangle",
-    "ellipsie",
-    "spline",
-    "draw_text",
-    # Geometry - Extrusions
-    "extrude",
-    "extrude_thin",
-    "cut_extrude",
-    # Geometry - Operations
-    "loft",
-    "sweep",
-    "revolve",
-    "boolean_operation",
-    "shell_body",
-    "fillet_edges",
-    "draw_holes",
-    "create_thread",
-    # Patterns
-    "circular_pattern",
-    "rectangular_pattern",
-    "move_latest_body",
-    # Parameters
-    "count",
-    "list_parameters",
-    "change_parameter",
-    # Export
-    "export_step",
-    "export_stl",
-    # Validation
+    # Infrastructure
     "test_connection",
     "get_model_state",
-    "get_faces_info",
     "delete_all",
     "undo",
-    # Scripting
+    # Scripting (most powerful)
     "execute_fusion_script",
-    # Testing
-    "save_test",
-    "load_tests",
-    "run_tests",
-    "delete_test",
-    "create_snapshot",
-    "list_snapshots",
-    "restore_snapshot",
-    "delete_snapshot",
+    "cancel_fusion_task",
+    # Inspection
+    "inspect_adsk_api",
+    "get_adsk_class_info",
+    "get_faces_info",
+    "get_edges_info",
+    "get_vertices_info",
     # Measurement
     "measure_distance",
     "measure_angle",
@@ -161,29 +103,24 @@ __all__ = [
     "measure_edge_length",
     "measure_body_properties",
     "measure_point_to_point",
-    "get_edges_info",
-    "get_vertices_info",
-    # Parametric - User Parameters
-    "create_parameter",
-    "delete_parameter",
-    # Parametric - Sketch Analysis
-    "get_sketch_info",
-    "get_sketch_constraints",
-    "get_sketch_dimensions",
-    # Parametric - Interference Detection
-    "check_interference",
-    # Parametric - Timeline / Feature History
-    "get_timeline_info",
-    "rollback_to_feature",
-    "rollback_to_end",
-    "suppress_feature",
-    # Parametric - Mass Properties
-    "get_mass_properties",
-    # Parametric - Construction Geometry
-    "create_offset_plane",
-    "create_plane_at_angle",
-    "create_midplane",
-    "create_construction_axis",
-    "create_construction_point",
+    # Parameters
+    "list_parameters",
+    "set_parameter",
+    "create_user_parameter",
+    # Telemetry
+    "get_telemetry_info",
+    "configure_telemetry",
+    # Utility (kept for internal use)
+    "check_all_interferences",
     "list_construction_geometry",
+    "suppress_feature",
+    # Testing (kept for internal use)
+    "save_test",
+    "load_tests",
+    "run_tests",
+    "delete_test",
+    "create_snapshot",
+    "list_snapshots",
+    "restore_snapshot",
+    "delete_snapshot",
 ]

@@ -14,6 +14,7 @@ import adsk.core
 import adsk.fusion
 import traceback
 from http.server import HTTPServer, BaseHTTPRequestHandler
+from socketserver import ThreadingMixIn
 from http import HTTPStatus
 import threading
 import json
@@ -24,6 +25,12 @@ import math
 import os
 import sys
 from io import StringIO
+
+
+class ThreadingHTTPServer(ThreadingMixIn, HTTPServer):
+    """HTTP Server that handles each request in a separate thread."""
+    daemon_threads = True  # Don't wait for threads to finish on shutdown
+
 
 # Ensure lib/ is in the path for imports
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -45,79 +52,49 @@ _log_debug(f"MCP.py loading, __file__={__file__}, _THIS_DIR={_THIS_DIR}")
 _log_debug(f"sys.path={sys.path[:5]}...")
 
 try:
-    # Import modular functions from lib/
-    from lib.geometry import (
-        draw_box,
-        draw_cylinder,
-        create_sphere,
-        draw_circle,
-        draw_ellipse,
-        draw_2d_rectangle,
-        draw_lines,
-        draw_one_line,
-        draw_arc,
-        draw_spline,
-        draw_text,
-    )
-    from lib.features import (
-        extrude_last_sketch,
-        extrude_thin,
-        cut_extrude,
-        loft,
-        sweep,
-        revolve_profile,
-        boolean_operation,
-        shell_existing_body,
-        fillet_edges,
-        holes,
-        create_thread,
-        circular_pattern,
-        rectangular_pattern,
-        move_last_body,
-        offsetplane,
-    )
+    # Import the task registry for auto-discovered dispatch
+    from lib.registry import dispatch as registry_dispatch, get_registry, list_tasks, build_task_args
+    
+    # Import SSE support for real-time task progress
+    from lib.server.sse import get_task_manager, format_sse, ProgressReporter, TaskStatus
+    
+    # Import modules to trigger @task registration
+    from lib import features  # noqa: F401 - Registers feature tasks
+    from lib.utils import state, selection, measurement, parametric  # noqa: F401 - Register util tasks
+    
+    # Import specific functions still needed directly for GET routes
     from lib.utils import (
         get_model_parameters,
         get_current_model_state,
         get_faces_info,
-        set_parameter,
-        undo,
-        delete_all,
-        select_body,
-        select_sketch,
-        export_as_step,
-        export_as_stl,
-        measure_point_to_point,
-        measure_distance,
-        measure_angle,
-        measure_area,
-        measure_volume,
-        measure_edge_length,
-        measure_body_properties,
         get_edges_info,
         get_vertices_info,
-        create_user_parameter,
-        delete_user_parameter,
+    )
+    from lib.utils.parametric import (
+        get_timeline_info,
         get_sketch_info,
         get_sketch_constraints,
         get_sketch_dimensions,
-        check_interference,
-        get_timeline_info,
-        rollback_to_feature,
-        rollback_to_end,
-        suppress_feature,
-        get_mass_properties,
-        create_offset_plane,
-        create_plane_at_angle,
-        create_midplane,
-        create_construction_axis,
-        create_construction_point,
         list_construction_geometry,
     )
+    
     _log_debug("All lib imports successful")
+    _log_debug(f"Registered tasks: {list_tasks()}")
 except Exception as e:
     _log_debug(f"Import error: {e}\n{traceback.format_exc()}")
     raise
+
+
+# =============================================================================
+# Version
+# =============================================================================
+__version__ = "1.0.0"
+
+
+# =============================================================================
+# Script Execution (special handling - not a @task function)
+# =============================================================================
+# execute_script is handled separately since it needs special execution context
 
 
 # Global state
@@ -128,7 +105,11 @@ result_queue = queue.Queue()
 script_result = {"status": "idle", "result": None, "error": None}
 script_result_lock = threading.Lock()
 
-TASK_TIMEOUT = 10.0
+# Task timeout - increased since SSE handles progress updates
+TASK_TIMEOUT = 300.0  # 5 minutes
+
+# Task manager for SSE streaming
+task_manager = None  # Initialized after imports
 
 # Event Handler variables
 app = None
@@ -144,111 +125,121 @@ class TaskEventHandler(adsk.core.CustomEventHandler):
     """Custom Event Handler for processing tasks from the queue.
     
     This is used because Fusion 360 API is not thread-safe.
+    Now supports SSE-based progress reporting and task cancellation.
     """
     def __init__(self):
         super().__init__()
         
     def notify(self, args):
-        global task_queue, result_queue, ModelParameterSnapshot, design, ui
+        global task_queue, result_queue, ModelParameterSnapshot, app, ui, task_manager, design
         try:
-            if design:
+            # Get active design - may be None if no document is open
+            # Update global design reference so HTTP handlers can use it
+            design = app.activeProduct if app else None
+            if design and design.objectType == 'adsk::fusion::Design':
                 ModelParameterSnapshot = get_model_parameters(design)
-                
-                while not task_queue.empty():
-                    try:
-                        task = task_queue.get_nowait()
-                        self.process_task(task)
-                    except queue.Empty:
-                        break
+            else:
+                design = None  # Clear if not a valid design
+            
+            # Cleanup old completed tasks periodically
+            if task_manager:
+                task_manager.cleanup_old_tasks()
+            
+            while not task_queue.empty():
+                try:
+                    task = task_queue.get_nowait()
+                    self.process_task(task)
+                except queue.Empty:
+                    break
         except Exception as e:
             pass
     
     def process_task(self, task):
-        """Process a single task and put result in result_queue."""
-        global design, ui, result_queue
+        """Process a single task and broadcast result via SSE."""
+        global app, ui, result_queue, task_manager
+        
+        # Get the active design lazily - it may not exist at startup
+        design = app.activeProduct
+        if design is None or design.objectType != 'adsk::fusion::Design':
+            error_msg = 'No active Fusion design. Please open or create a design first.'
+            # Check if task has task_id (new format: last element is 8-char ID)
+            if len(task) > 1 and isinstance(task[-1], str) and len(task[-1]) == 8:
+                task_id = task[-1]
+                if task_manager:
+                    task_manager.fail_task(task_id, error_msg)
+            result_queue.put({'error': error_msg})
+            return
         
         task_name = task[0]
+        
+        # Extract task_id if present (new format: last element is 8-char ID)
+        task_id = None
+        task_args = task
+        if len(task) > 1 and isinstance(task[-1], str) and len(task[-1]) == 8:
+            task_id = task[-1]
+            task_args = task[:-1]  # Remove task_id from args
+        
+        # Mark task as started
+        if task_id and task_manager:
+            task_manager.start_task(task_id)
+        
         try:
-            # Dispatch table for task processing
-            # Functions that return data should return the result dict
-            dispatch = {
-                'set_parameter': lambda: set_parameter(design, task[1], task[2]),
-                'draw_box': lambda: draw_box(design, task[1], task[2], task[3], task[4], task[5], task[6], task[7]),
-                'export_stl': lambda: export_as_stl(design, task[1]),
-                'fillet_edges': lambda: fillet_edges(design, task[1]),
-                'export_step': lambda: export_as_step(design, task[1]),
-                'draw_cylinder': lambda: draw_cylinder(design, task[1], task[2], task[3], task[4], task[5], task[6]),
-                'shell_body': lambda: shell_existing_body(design, task[1], task[2]),
-                'undo': lambda: undo(design),
-                'draw_lines': lambda: draw_lines(design, task[1], task[2]),
-                'extrude_last_sketch': lambda: extrude_last_sketch(design, task[1], task[2]),
-                'revolve_profile': lambda: revolve_profile(design, task[1]),
-                'arc': lambda: draw_arc(design, task[1], task[2], task[3], task[4], task[5]),
-                'draw_one_line': lambda: draw_one_line(design, task[1], task[2], task[3], task[4], task[5], task[6], task[7]),
-                'holes': lambda: holes(design, task[1], task[2], task[3], task[4]),
-                'circle': lambda: draw_circle(design, task[1], task[2], task[3], task[4], task[5]),
-                'extrude_thin': lambda: extrude_thin(design, task[1], task[2]),
-                'select_body': lambda: select_body(design, task[1]),
-                'select_sketch': lambda: select_sketch(design, task[1]),
-                'spline': lambda: draw_spline(design, task[1], task[2]),
-                'sweep': lambda: sweep(design),
-                'cut_extrude': lambda: cut_extrude(design, task[1]),
-                'circular_pattern': lambda: circular_pattern(design, task[1], task[2], task[3]),
-                'offsetplane': lambda: offsetplane(design, task[1], task[2]),
-                'loft': lambda: loft(design, task[1]),
-                'ellipsis': lambda: draw_ellipse(design, task[1], task[2], task[3], task[4], task[5], task[6], task[7], task[8], task[9], task[10]),
-                'draw_sphere': lambda: create_sphere(design, task[1], task[2], task[3], task[4]),
-                'threaded': lambda: create_thread(design, task[1], task[2]),
-                'delete_everything': lambda: delete_all(design),
-                'boolean_operation': lambda: boolean_operation(design, task[1]),
-                'draw_2d_rectangle': lambda: draw_2d_rectangle(design, task[1], task[2], task[3], task[4], task[5], task[6], task[7]),
-                'rectangular_pattern': lambda: rectangular_pattern(design, task[1], task[2], task[3], task[4], task[5], task[6], task[7]),
-                'draw_text': lambda: draw_text(design, task[1], task[2], task[3], task[4], task[5], task[6], task[7], task[8], task[9], task[10]),
-                'move_body': lambda: move_last_body(design, task[1], task[2], task[3]),
-                'execute_script': lambda: execute_fusion_script(design, task[1]),
-                # Measurement commands (return data)
-                'measure_distance': lambda: measure_distance(design, task[1], task[2], task[3], task[4], task[5], task[6]),
-                'measure_angle': lambda: measure_angle(design, task[1], task[2], task[3], task[4], task[5], task[6]),
-                'measure_area': lambda: measure_area(design, task[1], task[2]),
-                'measure_volume': lambda: measure_volume(design, task[1]),
-                'measure_edge_length': lambda: measure_edge_length(design, task[1], task[2]),
-                'measure_body_properties': lambda: measure_body_properties(design, task[1]),
-                'measure_point_to_point': lambda: measure_point_to_point(design, task[1], task[2]),
-                'edges_info': lambda: get_edges_info(design, task[1]),
-                'vertices_info': lambda: get_vertices_info(design, task[1]),
-                # Parametric commands (return data)
-                'create_parameter': lambda: create_user_parameter(design, task[1], task[2], task[3], task[4]),
-                'delete_parameter': lambda: delete_user_parameter(design, task[1]),
-                'sketch_info': lambda: get_sketch_info(design, task[1]),
-                'sketch_constraints': lambda: get_sketch_constraints(design, task[1]),
-                'sketch_dimensions': lambda: get_sketch_dimensions(design, task[1]),
-                'check_interference': lambda: check_interference(design, task[1], task[2]) if len(task) > 2 else check_interference(design),
-                'timeline_info': lambda: get_timeline_info(design),
-                'rollback_to_feature': lambda: rollback_to_feature(design, task[1]),
-                'rollback_to_end': lambda: rollback_to_end(design),
-                'suppress_feature': lambda: suppress_feature(design, task[1], task[2]),
-                'mass_properties': lambda: get_mass_properties(design, task[1], task[2] if len(task) > 2 else None),
-                'create_offset_plane': lambda: create_offset_plane(design, task[1], task[2]),
-                'create_plane_at_angle': lambda: create_plane_at_angle(design, task[1], task[2], task[3]),
-                'create_midplane': lambda: create_midplane(design, task[1], task[2], task[3]),
-                'create_construction_axis': lambda: create_construction_axis(design, task[1], task[2], task[3], task[4], task[5], task[6]),
-                'create_construction_point': lambda: create_construction_point(design, task[1], task[2], task[3], task[4], task[5], task[6], task[7]),
-                'list_construction_geometry': lambda: list_construction_geometry(design),
-            }
+            # Check for cancellation before starting
+            if task_id and task_manager and task_manager.is_cancelled(task_id):
+                result_queue.put({"success": False, "task": task_name, "error": "Task cancelled"})
+                return
             
-            if task_name in dispatch:
-                result = dispatch[task_name]()
-                # If the function returns a dict, use it; otherwise just report success
-                if isinstance(result, dict):
-                    result_queue.put(result)
-                else:
-                    result_queue.put({"success": True, "task": task_name})
+            # Create progress function if we have task_id
+            progress_fn = None
+            if task_id and task_manager:
+                progress_fn = lambda pct, msg="": task_manager.report_progress(task_id, pct, msg)
+            
+            # Use registry-based dispatch
+            result = self._dispatch_task(task_name, design, task_args, progress_fn, task_id)
+            
+            # If the function returns a dict, use it; otherwise just report success
+            if isinstance(result, dict):
+                if task_id and task_manager:
+                    if result.get("success", True):
+                        task_manager.complete_task(task_id, result)
+                    else:
+                        task_manager.fail_task(task_id, result.get("error", "Unknown error"))
+                result_queue.put(result)
             else:
-                result_queue.put({"success": False, "error": f"Unknown task: {task_name}"})
+                success_result = {"success": True, "task": task_name}
+                if task_id and task_manager:
+                    task_manager.complete_task(task_id, success_result)
+                result_queue.put(success_result)
             
         except Exception as e:
             error_msg = traceback.format_exc()
+            if task_id and task_manager:
+                task_manager.fail_task(task_id, error_msg)
             result_queue.put({"success": False, "task": task_name, "error": error_msg})
+    
+    def _dispatch_task(self, task_name, design, task, progress_fn=None, task_id=None):
+        """Dispatch a task using the auto-discovery registry.
+        
+        Args:
+            task_name: Name of the task (= function name)
+            design: Active Fusion design
+            task: Full task tuple (task_name, arg1, arg2, ...)
+            progress_fn: Optional progress callback (percent, message)
+            task_id: Optional task ID for cancellation checking
+        
+        Returns:
+            Result from the handler function
+        
+        Raises:
+            ValueError: If task is not registered
+        """
+        # Special case: execute_script needs special handling
+        if task_name == 'execute_script':
+            return execute_fusion_script(design, task[1], progress_fn, task_id)
+        
+        # Use registry dispatch - args are task[1:]
+        args = list(task[1:]) if len(task) > 1 else []
+        return registry_dispatch(task_name, design, ui, args)
 
 
 class TaskThread(threading.Thread):
@@ -265,7 +256,7 @@ class TaskThread(threading.Thread):
                 break
 
 
-def execute_fusion_script(design, script_code):
+def execute_fusion_script(design, script_code, progress_fn=None, task_id=None):
     """Execute arbitrary Python code in Fusion 360 context with helper functions.
     
     Available in scripts:
@@ -276,10 +267,12 @@ def execute_fusion_script(design, script_code):
                combine, pattern_circular, pattern_rectangular, last_body,
                last_sketch, body, delete_all
     - Assertions: assert_body_count, assert_sketch_count, assert_volume
+    - Progress: progress(percent, message) - report progress (0-100)
+    - Cancellation: is_cancelled() - check if task was cancelled
     
     Set a 'result' variable to return a value.
     """
-    global script_result, script_result_lock, ui
+    global script_result, script_result_lock, ui, task_manager
     
     old_stdout = sys.stdout
     old_stderr = sys.stderr
@@ -300,6 +293,21 @@ def execute_fusion_script(design, script_code):
     
     try:
         rootComp = design.rootComponent if design else None
+        
+        # =========================================================================
+        # Progress and cancellation helpers for scripts
+        # =========================================================================
+        
+        def progress(percent: float, message: str = ""):
+            """Report script progress (0-100)."""
+            if progress_fn:
+                progress_fn(percent, message)
+        
+        def is_cancelled() -> bool:
+            """Check if this script execution was cancelled."""
+            if task_id and task_manager:
+                return task_manager.is_cancelled(task_id)
+            return False
         
         # =========================================================================
         # Helper functions available in scripts
@@ -593,6 +601,9 @@ def execute_fusion_script(design, script_code):
             "assert_body_count": assert_body_count,
             "assert_sketch_count": assert_sketch_count,
             "assert_volume": assert_volume,
+            # Progress and cancellation
+            "progress": progress,
+            "is_cancelled": is_cancelled,
         }
         exec_locals = {}
         
@@ -629,27 +640,28 @@ def execute_fusion_script(design, script_code):
 
 
 class MCPRequestHandler(BaseHTTPRequestHandler):
-    """HTTP Request Handler for MCP commands."""
+    """HTTP Request Handler for MCP commands with SSE support."""
     
     def log_message(self, format, *args):
-        pass  # Suppress logging
+        _log_debug(f"[HTTP] {format % args}")
     
-    def _set_headers(self, status=HTTPStatus.OK):
+    def _set_headers(self, status=HTTPStatus.OK, content_type='application/json'):
         self.send_response(status)
-        self.send_header('Content-type', 'application/json')
+        self.send_header('Content-type', content_type)
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
     
     def do_OPTIONS(self):
         self.send_response(HTTPStatus.OK)
         self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
         self.send_header('Access-Control-Allow-Headers', 'Content-Type')
         self.end_headers()
     
     def do_GET(self):
-        """Handle GET requests for status and model state."""
-        global design, ModelParameterSnapshot, script_result, script_result_lock
+        """Handle GET requests for status, model state, and SSE stream."""
+        global design, ModelParameterSnapshot, script_result, script_result_lock, task_manager
+        _log_debug(f"GET request: {self.path}")
         
         # Parse path and query parameters
         from urllib.parse import urlparse, parse_qs
@@ -665,6 +677,40 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
             except:
                 return default
         
+        def get_str_param(name, default=""):
+            """Get query parameter as string."""
+            vals = query.get(name, [default])
+            return vals[0] if vals else default
+        
+        # SSE Events endpoint
+        if path == '/events':
+            self._handle_sse_stream(get_str_param('task_id'))
+            return
+        
+        # Task status endpoint
+        if path == '/task_status':
+            task_id = get_str_param('task_id')
+            if task_id and task_manager:
+                task = task_manager.get_task(task_id)
+                if task:
+                    self._set_headers()
+                    self.wfile.write(json.dumps({
+                        "task_id": task.task_id,
+                        "task_name": task.task_name,
+                        "status": task.status.value,
+                        "progress": task.progress,
+                        "message": task.message,
+                        "result": task.result,
+                        "error": task.error
+                    }).encode())
+                else:
+                    self._set_headers(HTTPStatus.NOT_FOUND)
+                    self.wfile.write(json.dumps({"error": f"Task {task_id} not found"}).encode())
+            else:
+                self._set_headers(HTTPStatus.BAD_REQUEST)
+                self.wfile.write(json.dumps({"error": "task_id parameter required"}).encode())
+            return
+        
         if path == '/status':
             self._set_headers()
             self.wfile.write(json.dumps({"status": "running"}).encode())
@@ -673,7 +719,7 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
             self._set_headers()
             self.wfile.write(json.dumps({"parameters": ModelParameterSnapshot}).encode())
         
-        elif path == '/model_state':
+        elif path == '/get_model_state':
             self._set_headers()
             state = get_current_model_state(design) if design else {"error": "No active design"}
             self.wfile.write(json.dumps(state).encode())
@@ -683,37 +729,37 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
             with script_result_lock:
                 self.wfile.write(json.dumps(script_result).encode())
         
-        elif path == '/faces_info':
+        elif path == '/get_faces_info':
             self._set_headers()
             result = get_faces_info(design, get_param('body_index', 0))
             self.wfile.write(json.dumps(result).encode())
         
-        elif path == '/edges_info':
+        elif path == '/get_edges_info':
             self._set_headers()
             result = get_edges_info(design, get_param('body_index', 0))
             self.wfile.write(json.dumps(result).encode())
         
-        elif path == '/vertices_info':
+        elif path == '/get_vertices_info':
             self._set_headers()
             result = get_vertices_info(design, get_param('body_index', 0))
             self.wfile.write(json.dumps(result).encode())
         
-        elif path == '/timeline_info':
+        elif path == '/get_timeline_info':
             self._set_headers()
             result = get_timeline_info(design)
             self.wfile.write(json.dumps(result).encode())
         
-        elif path == '/sketch_info':
+        elif path == '/get_sketch_info':
             self._set_headers()
             result = get_sketch_info(design, get_param('sketch_index', -1))
             self.wfile.write(json.dumps(result).encode())
         
-        elif path == '/sketch_constraints':
+        elif path == '/get_sketch_constraints':
             self._set_headers()
             result = get_sketch_constraints(design, get_param('sketch_index', -1))
             self.wfile.write(json.dumps(result).encode())
         
-        elif path == '/sketch_dimensions':
+        elif path == '/get_sketch_dimensions':
             self._set_headers()
             result = get_sketch_dimensions(design, get_param('sketch_index', -1))
             self.wfile.write(json.dumps(result).encode())
@@ -723,144 +769,180 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
             result = list_construction_geometry(design)
             self.wfile.write(json.dumps(result).encode())
         
+        elif path == '/check_all_interferences':
+            self._set_headers()
+            task_queue.put(('check_all_interferences',))
+            try:
+                result = result_queue.get(timeout=TASK_TIMEOUT)
+                self.wfile.write(json.dumps(result).encode())
+            except queue.Empty:
+                self.wfile.write(json.dumps({"error": "Task timeout"}).encode())
+        
         else:
             self._set_headers(HTTPStatus.NOT_FOUND)
             self.wfile.write(json.dumps({"error": "Not found"}).encode())
     
+    def _handle_sse_stream(self, task_id_filter: str = ""):
+        """Handle SSE event stream connection."""
+        global task_manager
+        
+        # Set SSE headers
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/event-stream')
+        self.send_header('Cache-Control', 'no-cache')
+        self.send_header('Connection', 'keep-alive')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        
+        if not task_manager:
+            self.wfile.write(format_sse("error", {"message": "Task manager not initialized"}))
+            self.wfile.flush()
+            return
+        
+        # Subscribe to events
+        subscriber_id = task_manager.subscribe()
+        
+        try:
+            # Send initial connection event
+            self.wfile.write(format_sse("connected", {"subscriber_id": subscriber_id}))
+            self.wfile.flush()
+            
+            # Stream events
+            event_queue = task_manager.get_event_queue(subscriber_id)
+            while True:
+                try:
+                    event = event_queue.get(timeout=30.0)
+                    
+                    # Filter by task_id if specified
+                    if task_id_filter:
+                        event_task_id = event.get("data", {}).get("task_id", "")
+                        if event_task_id != task_id_filter:
+                            continue
+                    
+                    self.wfile.write(format_sse(event["event"], event["data"]))
+                    self.wfile.flush()
+                    
+                    # Close stream on task completion if filtering
+                    if task_id_filter and event["event"] in ("task_completed", "task_failed", "task_cancelled"):
+                        break
+                        
+                except queue.Empty:
+                    # Send keepalive
+                    self.wfile.write(format_sse("keepalive", {}))
+                    self.wfile.flush()
+                    
+        except (BrokenPipeError, ConnectionResetError, OSError):
+            pass  # Client disconnected
+        finally:
+            task_manager.unsubscribe(subscriber_id)
+    
     def do_POST(self):
         """Handle POST requests for commands."""
-        global task_queue, result_queue, design
+        global task_queue, result_queue, design, task_manager
+        _log_debug(f"POST request: {self.path}")
         
         content_length = int(self.headers['Content-Length'])
         post_data = self.rfile.read(content_length)
+        _log_debug(f"  POST content_length: {content_length}")
         
         try:
             data = json.loads(post_data.decode('utf-8'))
+            _log_debug(f"  POST command: {data.get('command', 'unknown')}")
         except json.JSONDecodeError:
+            _log_debug(f"  POST error: Invalid JSON")
             self._set_headers(HTTPStatus.BAD_REQUEST)
             self.wfile.write(json.dumps({"error": "Invalid JSON"}).encode())
             return
         
         command = data.get('command')
         
-        # Route commands
-        routes = {
-            'set_parameter': lambda d: ('set_parameter', d.get('name'), d.get('value')),
-            'draw_box': lambda d: ('draw_box', d.get('width', 5), d.get('depth', 5), d.get('height', 5),
-                                   d.get('x', 0), d.get('y', 0), d.get('z', 0), d.get('plane', 'XY')),
-            'draw_cylinder': lambda d: ('draw_cylinder', d.get('radius', 1), d.get('height', 5),
-                                        d.get('x', 0), d.get('y', 0), d.get('z', 0), d.get('plane', 'XY')),
-            'draw_sphere': lambda d: ('draw_sphere', d.get('radius', 1), d.get('x', 0), d.get('y', 0), d.get('z', 0)),
-            'export_stl': lambda d: ('export_stl', d.get('name', 'export')),
-            'export_step': lambda d: ('export_step', d.get('name', 'export')),
-            'fillet_edges': lambda d: ('fillet_edges', d.get('radius', 0.1)),
-            'shell_body': lambda d: ('shell_body', d.get('thickness', 0.2), d.get('faceindex', 0)),
-            'undo': lambda d: ('undo',),
-            'delete_everything': lambda d: ('delete_everything',),
-            'draw_lines': lambda d: ('draw_lines', d.get('points', []), d.get('plane', 'XY')),
-            'draw_one_line': lambda d: ('draw_one_line', d.get('x1', 0), d.get('y1', 0), d.get('z1', 0),
-                                        d.get('x2', 1), d.get('y2', 1), d.get('z2', 0), d.get('close', False), d.get('plane', 'XY')),
-            'extrude_last_sketch': lambda d: ('extrude_last_sketch', d.get('distance', 1), d.get('operation', 0)),
-            'revolve_profile': lambda d: ('revolve_profile', d.get('angle', 360)),
-            'arc': lambda d: ('arc', d.get('center_x', 0), d.get('center_y', 0), d.get('radius', 1),
-                              d.get('start_angle', 0), d.get('end_angle', 180)),
-            'holes': lambda d: ('holes', d.get('points', []), d.get('width', 1), d.get('distance', 1), d.get('faceindex', 0)),
-            'circle': lambda d: ('circle', d.get('x', 0), d.get('y', 0), d.get('z', 0),
-                                 d.get('radius', 1), d.get('plane', 'XY')),
-            'extrude_thin': lambda d: ('extrude_thin', d.get('distance', 1), d.get('thickness', 0.1)),
-            'select_body': lambda d: ('select_body', d.get('name')),
-            'select_sketch': lambda d: ('select_sketch', d.get('name')),
-            'spline': lambda d: ('spline', d.get('points', []), d.get('plane', 'XY')),
-            'sweep': lambda d: ('sweep',),
-            'cut_extrude': lambda d: ('cut_extrude', d.get('distance', 1)),
-            'circular_pattern': lambda d: ('circular_pattern', d.get('count', 4), d.get('angle', 360), d.get('axis', 'Z')),
-            'offsetplane': lambda d: ('offsetplane', d.get('offset', 1), d.get('plane', 'XY')),
-            'loft': lambda d: ('loft', d.get('count', 2)),
-            'ellipsis': lambda d: ('ellipsis', d.get('x', 0), d.get('y', 0), d.get('z', 0),
-                                   d.get('major', 2), d.get('minor', 1), d.get('direction_x', 1),
-                                   d.get('direction_y', 0), d.get('direction_z', 0), d.get('height', 1), d.get('plane', 'XY')),
-            'threaded': lambda d: ('threaded', d.get('inside', True), d.get('allsizes', 1)),
-            'boolean_operation': lambda d: ('boolean_operation', d.get('operation', 'join')),
-            'draw_2d_rectangle': lambda d: ('draw_2d_rectangle', d.get('x1', 0), d.get('y1', 0), d.get('z1', 0),
-                                            d.get('x2', 5), d.get('y2', 5), d.get('z2', 0), d.get('plane', 'XY')),
-            'rectangular_pattern': lambda d: ('rectangular_pattern', d.get('count_x', 2), d.get('spacing_x', 1),
-                                              d.get('count_y', 2), d.get('spacing_y', 1),
-                                              d.get('axis_x', 'X'), d.get('axis_y', 'Y'), d.get('body_index', -1)),
-            'draw_text': lambda d: ('draw_text', d.get('text', 'Text'), d.get('thickness', 0.5),
-                                    d.get('x1', 0), d.get('y1', 0), d.get('z1', 0),
-                                    d.get('x2', 5), d.get('y2', 5), d.get('z2', 0),
-                                    d.get('extrusion', 0.5), d.get('plane', 'XY')),
-            'move_body': lambda d: ('move_body', d.get('x', 0), d.get('y', 0), d.get('z', 0)),
-            'execute_script': lambda d: ('execute_script', d.get('script', '')),
-            # Measurement routes
-            'measure_distance': lambda d: ('measure_distance', d.get('entity1_type'), d.get('entity1_index'),
-                                           d.get('entity2_type'), d.get('entity2_index'),
-                                           d.get('body1_index', 0), d.get('body2_index', 0)),
-            'measure_angle': lambda d: ('measure_angle', d.get('entity1_type'), d.get('entity1_index'),
-                                        d.get('entity2_type'), d.get('entity2_index'),
-                                        d.get('body1_index', 0), d.get('body2_index', 0)),
-            'measure_area': lambda d: ('measure_area', d.get('face_index'), d.get('body_index', 0)),
-            'measure_volume': lambda d: ('measure_volume', d.get('body_index', 0)),
-            'measure_edge_length': lambda d: ('measure_edge_length', d.get('edge_index'), d.get('body_index', 0)),
-            'measure_body_properties': lambda d: ('measure_body_properties', d.get('body_index', 0)),
-            'measure_point_to_point': lambda d: ('measure_point_to_point', d.get('point1'), d.get('point2')),
-            'edges_info': lambda d: ('edges_info', d.get('body_index', 0)),
-            'vertices_info': lambda d: ('vertices_info', d.get('body_index', 0)),
-            # Parametric routes
-            'create_parameter': lambda d: ('create_parameter', d.get('name'), d.get('value'), d.get('unit', 'mm'), d.get('comment', '')),
-            'delete_parameter': lambda d: ('delete_parameter', d.get('name')),
-            'sketch_info': lambda d: ('sketch_info', d.get('sketch_index', -1)),
-            'sketch_constraints': lambda d: ('sketch_constraints', d.get('sketch_index', -1)),
-            'sketch_dimensions': lambda d: ('sketch_dimensions', d.get('sketch_index', -1)),
-            'check_interference': lambda d: ('check_interference', d.get('body1_index'), d.get('body2_index')),
-            'timeline_info': lambda d: ('timeline_info',),
-            'rollback_to_feature': lambda d: ('rollback_to_feature', d.get('feature_index')),
-            'rollback_to_end': lambda d: ('rollback_to_end',),
-            'suppress_feature': lambda d: ('suppress_feature', d.get('feature_index'), d.get('suppress', True)),
-            'mass_properties': lambda d: ('mass_properties', d.get('body_index', 0), d.get('material_density')),
-            'create_offset_plane': lambda d: ('create_offset_plane', d.get('offset'), d.get('base_plane', 'XY')),
-            'create_plane_at_angle': lambda d: ('create_plane_at_angle', d.get('angle'), d.get('base_plane', 'XY'), d.get('axis', 'X')),
-            'create_midplane': lambda d: ('create_midplane', d.get('body_index', 0), d.get('face1_index', 0), d.get('face2_index', 1)),
-            'create_construction_axis': lambda d: ('create_construction_axis', d.get('axis_type'), d.get('body_index', 0),
-                                                   d.get('edge_index', 0), d.get('face_index', 0), d.get('point1'), d.get('point2')),
-            'create_construction_point': lambda d: ('create_construction_point', d.get('point_type'), d.get('x', 0), d.get('y', 0), d.get('z', 0),
-                                                    d.get('body_index', 0), d.get('vertex_index', 0), d.get('edge_index', 0)),
-            'list_construction_geometry': lambda d: ('list_construction_geometry',),
-        }
+        # Create tracked task
+        task_id = None
+        if task_manager:
+            task_id = task_manager.create_task(command)
         
-        if command in routes:
-            task = routes[command](data)
-            
-            # Clear result queue
-            while not result_queue.empty():
-                try:
-                    result_queue.get_nowait()
-                except queue.Empty:
-                    break
-            
-            task_queue.put(task)
-            
-            # Wait for result
-            try:
-                result = result_queue.get(timeout=TASK_TIMEOUT)
-                self._set_headers()
-                self.wfile.write(json.dumps(result).encode())
-            except queue.Empty:
-                self._set_headers(HTTPStatus.REQUEST_TIMEOUT)
-                self.wfile.write(json.dumps({"error": "Task timeout"}).encode())
+        # Special case: execute_script needs the raw script string
+        if command == 'execute_script':
+            if task_id:
+                task = ('execute_script', data.get('script', ''), task_id)
+            else:
+                task = ('execute_script', data.get('script', ''))
         else:
-            self._set_headers(HTTPStatus.BAD_REQUEST)
-            self.wfile.write(json.dumps({"error": f"Unknown command: {command}"}).encode())
-
+            # Use registry to auto-build task args from request data
+            try:
+                base_task = build_task_args(command, data)
+                # Append task_id to the task tuple if available
+                if task_id:
+                    task = base_task + (task_id,)
+                else:
+                    task = base_task
+            except ValueError:
+                if task_id and task_manager:
+                    task_manager.fail_task(task_id, f"Unknown command: {command}")
+                self._set_headers(HTTPStatus.BAD_REQUEST)
+                self.wfile.write(json.dumps({
+                    "error": f"Unknown command: {command}",
+                    "task_id": task_id
+                }).encode())
+                return
+        
+        # Clear result queue (legacy support)
+        while not result_queue.empty():
+            try:
+                result_queue.get_nowait()
+            except queue.Empty:
+                break
+        
+        task_queue.put(task)
+        
+        # Return task_id immediately - client should subscribe to SSE for result
+        self._set_headers(HTTPStatus.ACCEPTED)
+        self.wfile.write(json.dumps({
+            "task_id": task_id,
+            "status": "queued",
+            "message": f"Subscribe to /events?task_id={task_id} for updates"
+        }).encode())
+    
+    def do_DELETE(self):
+        """Handle DELETE requests for task cancellation."""
+        global task_manager
+        
+        from urllib.parse import urlparse
+        parsed = urlparse(self.path)
+        path = parsed.path
+        
+        # Cancel task endpoint: DELETE /task/{task_id}
+        if path.startswith('/task/'):
+            task_id = path.split('/')[-1]
+            if task_manager and task_manager.cancel_task(task_id):
+                self._set_headers()
+                self.wfile.write(json.dumps({
+                    "success": True,
+                    "task_id": task_id,
+                    "status": "cancelled"
+                }).encode())
+            else:
+                self._set_headers(HTTPStatus.NOT_FOUND)
+                self.wfile.write(json.dumps({
+                    "success": False,
+                    "error": f"Task {task_id} not found or already completed"
+                }).encode())
+        else:
+            self._set_headers(HTTPStatus.NOT_FOUND)
+            self.wfile.write(json.dumps({"error": "Not found"}).encode())
 
 def run(context):
     """Start the MCP Add-In."""
-    global app, ui, design, httpd, handlers, stopFlag, customEvent
+    global app, ui, design, httpd, handlers, stopFlag, customEvent, task_manager
     
     try:
         app = adsk.core.Application.get()
         ui = app.userInterface
-        design = app.activeProduct
+        # Note: design is fetched lazily when needed, not at startup
+        # This avoids errors when no document is open
+        
+        # Initialize task manager for SSE
+        task_manager = get_task_manager()
         
         # Register custom event
         customEvent = app.registerCustomEvent(myCustomEvent)
@@ -873,15 +955,23 @@ def run(context):
         taskThread = TaskThread(stopFlag)
         taskThread.start()
         
-        # Start HTTP server
-        server_address = ('', 5000)
-        httpd = HTTPServer(server_address, MCPRequestHandler)
+        # Start HTTP server (threaded to handle concurrent requests like SSE)
+        from config import FUSION_MCP_PORT
+        server_address = ('', FUSION_MCP_PORT)
+        httpd = ThreadingHTTPServer(server_address, MCPRequestHandler)
+        _log_debug(f"Starting ThreadingHTTPServer on port {FUSION_MCP_PORT}")
         
         serverThread = threading.Thread(target=httpd.serve_forever)
         serverThread.daemon = True
         serverThread.start()
         
-        ui.messageBox('MCP Server started on port 5000')
+        ui.messageBox(
+            f'MCP Add-In v{__version__}\n'
+            f'Server started on port {FUSION_MCP_PORT}\n\n'
+            'TELEMETRY WARNING:\n'
+            'This add-in may send usage data to external services.\n'
+            'Disable by setting POSTHOG_DISABLED=1 environment variable.'
+        )
         
     except Exception as e:
         if ui:

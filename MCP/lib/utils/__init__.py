@@ -1,7 +1,7 @@
 """Utils module for Fusion 360 MCP Add-In.
 
 This module contains utility functions for state management, selection,
-export operations, measurements, and parametric modeling.
+measurements, and parametric modeling.
 """
 
 from .state import (
@@ -15,10 +15,6 @@ from .state import (
 from .selection import (
     select_body,
     select_sketch,
-)
-from .export import (
-    export_as_step,
-    export_as_stl,
 )
 from .measurement import (
     get_entity_from_body,
@@ -64,9 +60,6 @@ __all__ = [
     # Selection
     "select_body",
     "select_sketch",
-    # Export
-    "export_as_step",
-    "export_as_stl",
     # Measurement
     "get_entity_from_body",
     "measure_distance",

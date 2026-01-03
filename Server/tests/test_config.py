@@ -1,71 +1,27 @@
-"""Tests for the config module."""
+"""Tests for configuration module."""
 
 import pytest
 
-from src.config import ENDPOINTS, HEADERS, BASE_URL, REQUEST_TIMEOUT
+from src.config import BASE_URL, HEADERS, REQUEST_TIMEOUT, endpoint
 
 
-class TestEndpoints:
-    """Tests for endpoint configuration."""
+class TestConfig:
+    """Test suite for configuration."""
 
     def test_base_url_correct(self):
-        """Test that BASE_URL is configured correctly."""
+        """Test that BASE_URL is set correctly."""
         assert BASE_URL == "http://localhost:5000"
 
-    def test_model_state_endpoint_exists(self):
-        """Test model_state endpoint is defined."""
-        assert "model_state" in ENDPOINTS
-        assert ENDPOINTS["model_state"] == f"{BASE_URL}/model_state"
-
-    def test_draw_box_endpoint_exists(self):
-        """Test draw_box endpoint is defined."""
-        assert "draw_box" in ENDPOINTS
-
-    def test_draw_cylinder_endpoint_exists(self):
-        """Test draw_cylinder endpoint is defined."""
-        assert "draw_cylinder" in ENDPOINTS
-
-    def test_extrude_endpoint_exists(self):
-        """Test extrude endpoint is defined."""
-        assert "extrude" in ENDPOINTS
-
-    def test_all_required_endpoints_exist(self):
-        """Test all major endpoint categories exist."""
-        required_endpoints = [
-            # Model state
-            "model_state", "test_connection",
-            # 3D Primitives
-            "draw_box", "draw_cylinder", "draw_sphere",
-            # 2D Sketches
-            "draw2Dcircle", "draw_lines", "spline",
-            # Extrusions
-            "extrude", "extrude_thin", "cut_extrude",
-            # Operations
-            "loft", "sweep", "revolve", "boolean_operation",
-            # Patterns
-            "circular_pattern", "rectangular_pattern",
-            # Export
-            "export_step", "export_stl",
-            # Utility
-            "undo", "delete_everything"
-        ]
-        for endpoint in required_endpoints:
-            assert endpoint in ENDPOINTS, f"Missing endpoint: {endpoint}"
-
-
-class TestHeaders:
-    """Tests for headers configuration."""
-
-    def test_content_type_header(self):
-        """Test Content-Type header is set."""
+    def test_headers_has_content_type(self):
+        """Test headers include content type."""
         assert "Content-Type" in HEADERS
         assert HEADERS["Content-Type"] == "application/json"
 
-
-class TestTimeouts:
-    """Tests for timeout configuration."""
-
     def test_request_timeout_is_positive(self):
-        """Test REQUEST_TIMEOUT is a positive number."""
+        """Test request timeout is a positive number."""
         assert REQUEST_TIMEOUT > 0
-        assert isinstance(REQUEST_TIMEOUT, (int, float))
+
+    def test_endpoint_function(self):
+        """Test the endpoint() helper function."""
+        assert endpoint("test") == "http://localhost:5000/test"
+        assert endpoint("model_state") == "http://localhost:5000/model_state"

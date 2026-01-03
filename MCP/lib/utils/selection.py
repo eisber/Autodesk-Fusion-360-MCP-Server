@@ -7,7 +7,10 @@ import adsk.core
 import adsk.fusion
 import traceback
 
+from lib.registry import task
 
+
+@task
 def select_body(design, ui, body_name):
     """
     Selects a body by name.
@@ -33,6 +36,7 @@ def select_body(design, ui, body_name):
         return None
 
 
+@task
 def select_sketch(design, ui, sketch_name):
     """
     Selects a sketch by name.

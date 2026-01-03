@@ -1,30 +1,9 @@
 """Geometry module for Fusion 360 MCP Add-In.
 
-This module contains functions for creating geometric primitives and sketches.
+Note: Geometry creation functions (primitives, sketches) have been removed.
+Use execute_fusion_script for all geometry creation operations.
+
+This module is kept for backward compatibility but exports nothing.
 """
 
-from .primitives import draw_box, draw_cylinder, create_sphere
-from .sketches import (
-    draw_circle,
-    draw_ellipse,
-    draw_2d_rectangle,
-    draw_lines,
-    draw_one_line,
-    draw_arc,
-    draw_spline,
-    draw_text,
-)
-
-__all__ = [
-    "draw_box",
-    "draw_cylinder",
-    "create_sphere",
-    "draw_circle",
-    "draw_ellipse",
-    "draw_2d_rectangle",
-    "draw_lines",
-    "draw_one_line",
-    "draw_arc",
-    "draw_spline",
-    "draw_text",
-]
+__all__ = []

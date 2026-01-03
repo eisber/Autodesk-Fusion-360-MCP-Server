@@ -1,63 +1,45 @@
-"""Tests for the parameters tools module."""
+"""Tests for parameter tools using @fusion_tool decorator."""
 
 import pytest
 from unittest.mock import patch, MagicMock
 
-from src.tools.parameters import count, list_parameters, change_parameter
 
+class TestParameterTools:
+    """Test suite for parameter tools."""
 
-class TestCount:
-    """Tests for count function."""
-
-    @patch("src.tools.parameters.send_request")
-    def test_count_returns_result(self, mock_send):
-        """Test count returns result."""
-        mock_send.return_value = {"count": 5}
+    @patch('src.tools.base.requests.get')
+    @patch('src.tools.base.get_telemetry')
+    def test_list_parameters(self, mock_telemetry, mock_get):
+        """Test list_parameters sends correct request."""
+        from src.tools.parameters import list_parameters
         
-        result = count()
-        
-        assert result == {"count": 5}
-
-
-class TestListParameters:
-    """Tests for list_parameters function."""
-
-    @patch("src.tools.parameters.send_request")
-    def test_list_parameters_returns_list(self, mock_send):
-        """Test list_parameters returns parameter list."""
-        mock_send.return_value = {
-            "parameters": [
-                {"name": "Width", "value": "10 mm"},
-                {"name": "Height", "value": "20 mm"}
-            ]
+        mock_telemetry.return_value = MagicMock()
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "parameters": [{"name": "width", "value": 10}]
         }
+        mock_get.return_value = mock_response
         
         result = list_parameters()
         
-        assert "parameters" in result
-        assert len(result["parameters"]) == 2
+        assert len(result["parameters"]) == 1
+        mock_get.assert_called_once()
 
-
-class TestChangeParameter:
-    """Tests for change_parameter function."""
-
-    @patch("src.tools.parameters.send_request")
-    def test_change_parameter_basic(self, mock_send):
-        """Test basic parameter change."""
-        mock_send.return_value = {"status": "ok"}
+    @patch('src.tools.base.requests.post')
+    @patch('src.tools.base.get_telemetry')
+    def test_set_parameter(self, mock_telemetry, mock_post):
+        """Test set_parameter sends correct request."""
+        from src.tools.parameters import set_parameter
         
-        result = change_parameter("Width", "15 mm")
+        mock_telemetry.return_value = MagicMock()
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"success": True}
+        mock_post.return_value = mock_response
         
-        data = mock_send.call_args[0][1]
-        assert data["name"] == "Width"
-        assert data["value"] == "15 mm"
-
-    @patch("src.tools.parameters.send_request")
-    def test_change_parameter_expression(self, mock_send):
-        """Test parameter change with expression."""
-        mock_send.return_value = {"status": "ok"}
+        result = set_parameter(name="width", value="20")
         
-        result = change_parameter("Height", "Width * 2")
-        
-        data = mock_send.call_args[0][1]
-        assert data["value"] == "Width * 2"
+        assert result["success"] is True
+        mock_post.assert_called_once()
+        call_kwargs = mock_post.call_args
+        assert call_kwargs[1]['json']['name'] == 'width'
+        assert call_kwargs[1]['json']['value'] == '20'

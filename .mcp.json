@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "fusion-mcp": {
+      "command": "uv",
+      "args": ["run", "--directory", "${CLAUDE_PROJECT_ROOT}/Server", "python", "MCP_Server.py", "--server_type", "stdio"]
+    }
+  }
+}

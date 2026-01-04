@@ -83,13 +83,13 @@ jobs:
           name: coverage-server
           path: Server/coverage.xml
 
-  test-mcp-addin:${{ matrix.os }} / Python ${{ matrix.python-version }})
+  test-mcp-addin:
+    name: Test MCP Add-In (${{ matrix.os }} / Python ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest]st: false
-      matrix:
+        os: [windows-latest, macos-latest]
         python-version: ['3.10', '3.11', '3.12']
 
     steps:
@@ -122,8 +122,8 @@ jobs:
           python -m pytest lib/tests/ -v --tb=short --cov=lib --cov-report=xml --cov-report=term-missing
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4 && matrix.os == 'windows-latest'
-        if: matrix.python-version == '3.11'
+        uses: actions/upload-artifact@v4
+        if: matrix.python-version == '3.11' && matrix.os == 'windows-latest'
         with:
           name: coverage-mcp
           path: MCP/coverage.xml

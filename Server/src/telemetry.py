@@ -125,6 +125,9 @@ class TelemetryClient:
                 posthog.host = POSTHOG_HOST
                 posthog.debug = False
                 posthog.disabled = POSTHOG_API_KEY == "phc_REPLACE_WITH_YOUR_KEY"
+                # Use sync mode to ensure events are sent immediately
+                # This is important for short-lived MCP processes
+                posthog.sync_mode = True
                 
                 if not posthog.disabled:
                     # Identify user on first init
@@ -137,7 +140,7 @@ class TelemetryClient:
                             'first_seen': self.config.first_seen,
                         }
                     )
-                    logger.debug("Telemetry initialized")
+                    logger.debug("Telemetry initialized (sync mode)")
             except Exception as e:
                 logger.debug(f"Could not initialize PostHog: {e}")
     
@@ -210,6 +213,7 @@ class TelemetryClient:
     ) -> None:
         """Track a tool invocation."""
         if not self.enabled:
+            logger.debug(f"Telemetry disabled, skipping track_tool_call for {tool_name}")
             return
         
         self._tool_calls += 1
@@ -241,6 +245,7 @@ class TelemetryClient:
                 event='tool_call',
                 properties=properties
             )
+            logger.debug(f"Telemetry: tracked tool_call for {tool_name} (success={success})")
         except Exception as e:
             logger.debug(f"Failed to track tool call: {e}")
     

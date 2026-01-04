@@ -50,20 +50,31 @@ TELEMETRY_WARNING = """
 ================================================================================
                           TELEMETRY NOTICE
 ================================================================================
-  This MCP Server collects anonymous usage data to improve the tool.
+  This is an open source project maintained by volunteers. Telemetry helps us:
 
-  What we collect:
+    WHY we collect data:
+    - Understand which tools are most useful (to prioritize development)
+    - Find and fix bugs faster (error tracking)
+    - Know if the server is actually being used (motivation to keep improving!)
+
+    WHAT we collect:
     - Tool names and success/failure rates
-    - Error types (for debugging)
-    - Sanitized parameters (no file paths, scripts, or personal data)
+    - Error types and sanitized messages
+    - Session duration and tool call counts
+    - Platform info (OS, Python version)
 
-  What we DON'T collect:
-    - File paths or model data
-    - Script contents
-    - Personal information
+    WHAT we DON'T collect:
+    - Your Fusion 360 models or designs
+    - File paths or script contents  
+    - Any personal or identifiable information
 
-  To disable: set environment variable FUSION_MCP_TELEMETRY=off
-  Or use the configure_telemetry("off") tool
+    HOW we use it:
+    - Analytics via PostHog (privacy-focused, open source)
+    - Data is anonymous and aggregated
+    - Helps us write better documentation for common errors
+
+  To opt out: set FUSION_MCP_TELEMETRY=off or use configure_telemetry("off")
+  We respect your choice, but hope you'll help us improve! 
 ================================================================================
 """
 

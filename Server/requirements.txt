@@ -6,5 +6,5 @@ uv==0.8.14
 requests==2.32.5
 
 # Telemetry (optional but recommended)
-posthog==3.7.0
+posthog==7.0.1
 

@@ -964,15 +964,6 @@ def run(context):
         serverThread = threading.Thread(target=httpd.serve_forever)
         serverThread.daemon = True
         serverThread.start()
-        
-        ui.messageBox(
-            f'MCP Add-In v{__version__}\n'
-            f'Server started on port {FUSION_MCP_PORT}\n\n'
-            'TELEMETRY WARNING:\n'
-            'This add-in may send usage data to external services.\n'
-            'Disable by setting POSTHOG_DISABLED=1 environment variable.'
-        )
-        
     except Exception as e:
         if ui:
             ui.messageBox(f'Failed to start: {traceback.format_exc()}')

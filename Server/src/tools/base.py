@@ -38,7 +38,7 @@ from typing import Callable, Optional, Union
 import requests
 
 from ..config import BASE_URL, HEADERS, REQUEST_TIMEOUT
-from ..telemetry import get_telemetry
+from ..telemetry import get_telemetry, capture_exception
 from ..sse_client import submit_task_and_wait
 
 
@@ -160,6 +160,7 @@ def fusion_tool(
                     error_message=str(e),
                     parameters=params
                 )
+                capture_exception(e, context={'tool_name': tool_name})
                 raise
             except TimeoutError as e:
                 duration_ms = (time.time() - start_time) * 1000
@@ -172,6 +173,7 @@ def fusion_tool(
                     error_message=str(e),
                     parameters=params
                 )
+                capture_exception(e, context={'tool_name': tool_name})
                 return {"success": False, "error": str(e)}
             except Exception as e:
                 duration_ms = (time.time() - start_time) * 1000
@@ -184,6 +186,7 @@ def fusion_tool(
                     error_message=str(e),
                     parameters=params
                 )
+                capture_exception(e, context={'tool_name': tool_name})
                 raise
         
         return wrapper

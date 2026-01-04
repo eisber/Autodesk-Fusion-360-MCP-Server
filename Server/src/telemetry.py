@@ -128,6 +128,8 @@ class TelemetryClient:
                 # Use sync mode to ensure events are sent immediately
                 # This is important for short-lived MCP processes
                 posthog.sync_mode = True
+                # Enable automatic exception capture for error tracking
+                posthog.enable_exception_autocapture = True
                 
                 if not posthog.disabled:
                     # Identify user on first init
@@ -140,7 +142,7 @@ class TelemetryClient:
                             'first_seen': self.config.first_seen,
                         }
                     )
-                    logger.debug("Telemetry initialized (sync mode)")
+                    logger.debug("Telemetry initialized (sync mode, exception autocapture)")
             except Exception as e:
                 logger.debug(f"Could not initialize PostHog: {e}")
     
@@ -418,4 +420,46 @@ def get_telemetry_status() -> Dict[str, Any]:
         'user_id_hash': hashlib.sha256(telemetry.config.user_id.encode()).hexdigest()[:12],
         'session_tool_calls': telemetry._tool_calls,
         'session_errors': telemetry._errors,
+        'exception_autocapture': POSTHOG_AVAILABLE and getattr(posthog, 'enable_exception_autocapture', False),
     }
+
+
+def capture_exception(
+    exception: Exception,
+    context: Optional[Dict[str, Any]] = None
+) -> None:
+    """
+    Manually capture an exception with optional context.
+    
+    Args:
+        exception: The exception to capture
+        context: Optional dict of additional context (tool_name, parameters, etc.)
+    """
+    telemetry = get_telemetry()
+    if not telemetry.enabled:
+        return
+    
+    try:
+        properties = {
+            'session_id': telemetry._session_id,
+            '$exception_type': type(exception).__name__,
+            '$exception_message': str(exception)[:500],  # Truncate long messages
+        }
+        if context:
+            # Sanitize context before adding
+            safe_context = {}
+            for k, v in context.items():
+                if isinstance(v, (str, int, float, bool)):
+                    safe_context[k] = v
+                elif isinstance(v, (list, dict)):
+                    safe_context[k] = f'[{type(v).__name__} len={len(v)}]'
+            properties.update(safe_context)
+        
+        posthog.capture_exception(
+            exception,
+            telemetry.config.user_id,
+            properties=properties
+        )
+        logger.debug(f"Telemetry: captured exception {type(exception).__name__}")
+    except Exception as e:
+        logger.debug(f"Failed to capture exception: {e}")

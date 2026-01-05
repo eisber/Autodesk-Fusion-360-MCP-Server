@@ -25,7 +25,7 @@
 
 [Setup]
 ; Unique app identifier (DO NOT CHANGE after first release)
-AppId={3c486893-8b8f-4f5c-b218-b1cd6e94ca6e}
+AppId={{3c486893-8b8f-4f5c-b218-b1cd6e94ca6e}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
@@ -112,8 +112,8 @@ Source: "shared\*"; DestDir: "{app}\shared"; Flags: ignoreversion recursesubdirs
 Source: "MCP\*"; DestDir: "{app}\MCP"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: addin; \
   Excludes: "*.pyc,__pycache__,.pytest_cache,mcp_debug.log,.env,venv,.venv"
 
-; Assets
-Source: "assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs; \
+; Assets (optional - may not have generated icons yet)
+Source: "assets\*"; DestDir: "{app}\assets"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist; \
   Excludes: "*.svg"
 
 ; Documentation

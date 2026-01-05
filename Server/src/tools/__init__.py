@@ -10,41 +10,27 @@ Tool categories:
 - Inspection: inspect_adsk_api, get_faces_info, get_edges_info, get_vertices_info
 - Measurement: measure_distance, measure_angle, measure_area, etc.
 - Parameters: list_parameters, set_parameter, create_user_parameter
-- Telemetry: get_telemetry_info, configure_telemetry
+- Telemetry: configure_telemetry
 """
 
 # Validation/Infrastructure tools
-from .validation import (
-    test_connection,
-    get_model_state,
-    get_faces_info,
-    delete_all,
-    undo,
-)
-
-# Scripting tools (core functionality)
-from .scripting import (
-    execute_fusion_script,
-    cancel_fusion_task,
-)
-
 # Inspection tools
 from .inspection import (
-    inspect_adsk_api,
     get_adsk_class_info,
+    inspect_adsk_api,
 )
 
 # Measurement tools
 from .measurement import (
-    measure_distance,
-    measure_angle,
-    measure_area,
-    measure_volume,
-    measure_edge_length,
-    measure_body_properties,
-    measure_point_to_point,
     get_edges_info,
     get_vertices_info,
+    measure_angle,
+    measure_area,
+    measure_body_properties,
+    measure_distance,
+    measure_edge_length,
+    measure_point_to_point,
+    measure_volume,
 )
 
 # Parameter tools
@@ -55,29 +41,41 @@ from .parameters import (
 
 # Parametric tools (convenience)
 from .parametric import (
-    create_user_parameter,
     # Kept for potential future use but not in shared defs
     check_all_interferences,
+    create_user_parameter,
     list_construction_geometry,
     suppress_feature,
 )
 
+# Scripting tools (core functionality)
+from .scripting import (
+    cancel_fusion_task,
+    execute_fusion_script,
+)
+
 # Telemetry tools
 from .telemetry_tools import (
-    get_telemetry_info,
     configure_telemetry,
 )
 
 # Testing tools (kept for internal use, not in shared defs)
 from .testing import (
-    save_test,
-    load_tests,
-    run_tests,
-    delete_test,
     create_snapshot,
-    list_snapshots,
-    restore_snapshot,
     delete_snapshot,
+    delete_test,
+    list_snapshots,
+    load_tests,
+    restore_snapshot,
+    run_tests,
+    save_test,
+)
+from .validation import (
+    delete_all,
+    get_faces_info,
+    get_model_state,
+    test_connection,
+    undo,
 )
 
 __all__ = [
@@ -108,7 +106,6 @@ __all__ = [
     "set_parameter",
     "create_user_parameter",
     # Telemetry
-    "get_telemetry_info",
     "configure_telemetry",
     # Utility (kept for internal use)
     "check_all_interferences",

@@ -16,14 +16,12 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
-from typing import Dict, List
 
 # Add parent directory to path for imports
 ROOT_DIR = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT_DIR))
 
 from shared.tool_definitions import (
-    TOOL_DEFINITIONS,
     ToolDef,
     get_tools_by_category,
     list_categories,
@@ -33,7 +31,7 @@ from shared.tool_definitions import (
 def generate_function_stub(tool: ToolDef) -> str:
     """Generate a @fusion_tool decorated function stub."""
     lines = []
-    
+
     # Decorator
     decorator_args = []
     if tool.endpoint != tool.name:
@@ -41,40 +39,40 @@ def generate_function_stub(tool: ToolDef) -> str:
     if tool.http_method == "GET":
         decorator_args.append('method="GET"')
     if not tool.use_sse:
-        decorator_args.append('use_sse=False')
-    
+        decorator_args.append("use_sse=False")
+
     if decorator_args:
         lines.append(f"@fusion_tool({', '.join(decorator_args)})")
     else:
         lines.append("@fusion_tool")
-    
+
     # Function signature
     params_str = tool.get_signature_params()
     lines.append(f"def {tool.name}({params_str}):")
-    
+
     # Docstring
     lines.append('    """')
     lines.append(f"    {tool.description}")
-    
+
     if tool.params:
         lines.append("    ")
         lines.append("    Args:")
         for p in tool.params:
             default_note = "" if p.required else f" (default: {p.default})"
             lines.append(f"        {p.name}: {p.description}{default_note}")
-    
+
     if tool.returns:
         lines.append("    ")
         lines.append("    Returns:")
         lines.append(f"        {tool.returns}")
-    
+
     lines.append('    """')
     lines.append("")  # Empty function body (stub)
-    
+
     return "\n".join(lines)
 
 
-def generate_category_module(category: str, tools: List[ToolDef]) -> str:
+def generate_category_module(category: str, tools: list[ToolDef]) -> str:
     """Generate a complete module for a category of tools."""
     lines = [
         f'"""Auto-generated {category.title()} tools for Fusion 360 MCP Server.',
@@ -89,11 +87,11 @@ def generate_category_module(category: str, tools: List[ToolDef]) -> str:
         "",
         "",
     ]
-    
+
     for tool in tools:
         lines.append(generate_function_stub(tool))
         lines.append("")
-    
+
     return "\n".join(lines)
 
 
@@ -116,18 +114,18 @@ def preview_generation():
     print("=" * 60)
     print("Preview of generated Server stubs")
     print("=" * 60)
-    
+
     for category in list_categories():
         tools = get_tools_by_category(category)
         if not tools:
             continue
-        
+
         module_name = CATEGORY_TO_MODULE.get(category, category)
-        print(f"\n\n{'='*60}")
+        print(f"\n\n{'=' * 60}")
         print(f"Category: {category} -> Server/src/tools/{module_name}.py")
         print(f"Tools: {len(tools)}")
-        print("="*60)
-        
+        print("=" * 60)
+
         for tool in tools:
             print(f"\n{generate_function_stub(tool)}")
 
@@ -135,6 +133,7 @@ def preview_generation():
 def show_single_tool_stub(tool_name: str):
     """Show stub for a single tool."""
     from shared.tool_definitions import get_tool
+
     tool = get_tool(tool_name)
     if tool:
         print(generate_function_stub(tool))
@@ -149,11 +148,11 @@ def main():
     parser.add_argument("--tool", type=str, help="Generate stub for a single tool")
     parser.add_argument("--category", type=str, help="Generate stubs for a category")
     args = parser.parse_args()
-    
+
     if args.tool:
         show_single_tool_stub(args.tool)
         return
-    
+
     if args.category:
         tools = get_tools_by_category(args.category)
         if tools:
@@ -162,9 +161,9 @@ def main():
             print(f"No tools found for category '{args.category}'")
             print(f"Available categories: {list_categories()}")
         return
-    
+
     preview_generation()
-    
+
     if args.write:
         print("\n⚠️  --write not fully implemented yet.")
         print("    The generated stubs should be manually reviewed before replacing")

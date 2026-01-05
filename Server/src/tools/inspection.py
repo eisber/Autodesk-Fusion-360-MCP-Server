@@ -8,7 +8,7 @@ import json
 import logging
 import traceback
 
-from .scripting import execute_fusion_script
+from .scripting import _execute_script_sync
 
 
 def inspect_adsk_api(path: str = "adsk.fusion") -> dict:
@@ -165,36 +165,36 @@ def inspect_path(path):
 # Execute inspection
 target_path = PATH_PLACEHOLDER
 result = inspect_path(target_path)
-'''.replace('PATH_PLACEHOLDER', repr(path))
+'''.replace("PATH_PLACEHOLDER", repr(path))
 
     try:
-        response = execute_fusion_script(inspection_script)
-        
-        if not response.get('success'):
+        response = _execute_script_sync(inspection_script)
+
+        if not response.get("success"):
             return {
-                'success': False,
-                'error': response.get('error', 'Unknown error'),
-                'traceback': response.get('traceback'),
+                "success": False,
+                "error": response.get("error", "Unknown error"),
+                "traceback": response.get("traceback"),
             }
-        
+
         # The result is returned via the 'result' variable
-        return_value = response.get('return_value')
+        return_value = response.get("return_value")
         if return_value:
             if isinstance(return_value, str):
                 try:
                     return_value = json.loads(return_value)
                 except json.JSONDecodeError:
                     pass
-            return {'success': True, **return_value}
-        
-        return {'success': True, 'data': response}
-        
+            return {"success": True, **return_value}
+
+        return {"success": True, "data": response}
+
     except Exception as e:
         logging.error("inspect_adsk_api failed: %s", e)
         return {
-            'success': False,
-            'error': str(e),
-            'traceback': traceback.format_exc(),
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc(),
         }
 
 
@@ -220,12 +220,12 @@ def get_adsk_class_info(class_path: str) -> dict:
         class Sketch:
             \"\"\"
             Represents a sketch in Fusion 360.
-            
+
             Properties:
                 sketchCurves: SketchCurves - Collection of curves in the sketch.
                 profiles: Profiles - Collection of closed profiles.
                 ...
-            
+
             Methods:
                 add(plane) -> Sketch
                     Creates a new sketch on the specified plane.
@@ -349,33 +349,33 @@ def format_docstring_style(path):
     }
 
 result = format_docstring_style(CLASS_PATH_PLACEHOLDER)
-'''.replace('CLASS_PATH_PLACEHOLDER', repr(class_path))
+'''.replace("CLASS_PATH_PLACEHOLDER", repr(class_path))
 
     try:
-        response = execute_fusion_script(inspection_script)
-        
-        if not response.get('success'):
+        response = _execute_script_sync(inspection_script)
+
+        if not response.get("success"):
             return {
-                'success': False,
-                'error': response.get('error', 'Unknown error'),
-                'traceback': response.get('traceback'),
+                "success": False,
+                "error": response.get("error", "Unknown error"),
+                "traceback": response.get("traceback"),
             }
-        
-        return_value = response.get('return_value')
+
+        return_value = response.get("return_value")
         if return_value:
             if isinstance(return_value, str):
                 try:
                     return_value = json.loads(return_value)
                 except json.JSONDecodeError:
                     pass
-            return {'success': True, **return_value}
-        
-        return {'success': True, 'data': response}
-        
+            return {"success": True, **return_value}
+
+        return {"success": True, "data": response}
+
     except Exception as e:
         logging.error("get_adsk_class_info failed: %s", e)
         return {
-            'success': False,
-            'error': str(e),
-            'traceback': traceback.format_exc(),
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc(),
         }

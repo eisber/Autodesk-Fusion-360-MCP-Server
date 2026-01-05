@@ -1,0 +1,199 @@
+[project]
+name = "fusion360-mcp-server"
+version = "0.1.0"
+description = "Model Context Protocol (MCP) Server for Autodesk Fusion 360"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+keywords = ["fusion360", "mcp", "autodesk", "cad", "3d-modeling"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+    "pre-commit>=4.0.0",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.0.0",
+]
+
+# =============================================================================
+# Ruff Configuration (replaces black, isort, flake8, pylint)
+# =============================================================================
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+exclude = [
+    ".git",
+    ".github",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    "__pycache__",
+    "*.pyi",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "ARG",    # flake8-unused-arguments
+    "SIM",    # flake8-simplify
+    "TCH",    # flake8-type-checking
+    "PL",     # Pylint
+    "RUF",    # Ruff-specific rules
+]
+ignore = [
+    "E501",     # line too long (handled by formatter)
+    "PLR0913",  # too many arguments
+    "PLR2004",  # magic value comparison
+    "PLR0911",  # too many return statements
+    "PLR0912",  # too many branches
+    "PLR0915",  # too many statements
+    "SIM108",   # use ternary operator (can reduce readability)
+    "ARG001",   # unused function argument (common in callbacks/handlers)
+    "ARG002",   # unused method argument (common in callbacks/handlers)
+    "PLC0415",  # import not at top of file (common in lazy loading, tests)
+    "E402",     # module level import not at top (needed for path manipulation)
+    "PLW0603",  # global statement (acceptable for singletons)
+    "SIM105",   # contextlib.suppress (try/except/pass is often clearer)
+    "RUF022",   # __all__ not sorted (intentionally grouped by category)
+    "E731",     # lambda assignment (acceptable for simple callbacks)
+    "ARG005",   # unused lambda argument (placeholder lambdas)
+    "F403",     # star imports (common for utility modules)
+    "RUF013",   # implicit Optional (transitional - will fix later)
+    "RUF003",   # ambiguous characters in comments (intentional unicode)
+    "RUF005",   # tuple concatenation style (personal preference)
+    "RUF046",   # int(round()) redundancy (intentional explicitness)
+    "SIM102",   # nested if statements (can improve readability)
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests can have unused imports (fixtures), magic values, unused vars, etc.
+"**/tests/**/*.py" = ["ARG", "PLR", "F401", "F811", "F841", "PTH", "SIM117", "UP035", "PLW2901", "W293"]
+"**/conftest.py" = ["ARG", "F401", "F811", "PTH", "SIM102"]
+# MCP Add-In has Fusion 360 API patterns that may trigger false positives
+"MCP/**/*.py" = ["ARG001", "ARG002", "PLR0913", "F841", "E731"]
+# Entry points and command handlers have specific patterns
+"MCP/commands/**/*.py" = ["ARG", "PLR", "F841"]
+# MCP lib has existing patterns that should not be changed
+"MCP/lib/**/*.py" = ["F841", "PLW2901", "ARG005"]
+# Scripts may use conditional imports and path manipulation
+"scripts/**/*.py" = ["PTH", "F401", "B007", "B905", "SIM102", "W293"]
+# Projects folder - standalone scripts
+"Projects/**/*.py" = ["PTH", "RUF046"]
+# Server src - allow os.path usage in testing.py (existing codebase)
+"Server/src/tools/testing.py" = ["PTH"]
+"Server/src/telemetry.py" = ["PTH", "SIM101", "F841"]
+"Server/src/sse_client.py" = ["PLW2901"]
+"Server/src/tools/base.py" = ["F841"]
+"Server/src/tools/inspection.py" = ["SIM105", "W291", "W293"]
+"Server/src/instructions.py" = ["W291", "W293"]
+# Prompts contain code examples that should not be reformatted
+"Server/src/prompts.py" = ["W291", "W293"]
+# MCP Server entry point
+"Server/MCP_Server.py" = ["W291", "W293"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src", "lib", "shared"]
+force-single-line = false
+combine-as-imports = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+
+# =============================================================================
+# Mypy Configuration (static type checking)
+# =============================================================================
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_ignores = true
+warn_unused_configs = true
+warn_redundant_casts = true
+no_implicit_optional = true
+strict_equality = true
+show_error_codes = true
+show_column_numbers = true
+
+# Start lenient, tighten over time
+ignore_missing_imports = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+
+# Per-module overrides
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+ignore_errors = false
+
+[[tool.mypy.overrides]]
+module = "adsk.*"
+ignore_missing_imports = true
+ignore_errors = true
+
+# =============================================================================
+# Pytest Configuration
+# =============================================================================
+[tool.pytest.ini_options]
+testpaths = ["Server/tests", "MCP/lib/tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+# =============================================================================
+# Coverage Configuration
+# =============================================================================
+[tool.coverage.run]
+source = ["Server/src", "MCP/lib"]
+branch = true
+omit = [
+    "**/tests/**",
+    "**/__pycache__/**",
+    "**/conftest.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
+
+# =============================================================================
+# Bandit Configuration (security scanning)
+# =============================================================================
+[tool.bandit]
+exclude_dirs = ["tests", "**/tests", "conftest.py"]
+skips = ["B101"]  # Skip assert_used check (common in tests)

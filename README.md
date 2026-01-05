@@ -15,14 +15,31 @@ Fusion MCP Integration bridges AI assistants with Autodesk Fusion 360 through th
 
 ---
 
-## ⚡ Quick Start (5 Minutes)
+## ⚡ Quick Start (2 Minutes)
 
-**Prerequisites:** [Python 3.10+](https://python.org), [Autodesk Fusion 360](https://autodesk.com/fusion360), [uv](https://docs.astral.sh/uv/getting-started/installation/)
+**Prerequisites:** [Autodesk Fusion 360](https://autodesk.com/fusion360)
+
+### Windows Installer (Recommended)
+
+1. **Download** the latest `FusionMCPServerSetup-*.exe` from [GitHub Releases](https://github.com/eisber/Autodesk-Fusion-360-MCP-Server/releases)
+2. **Run** the installer — it automatically:
+   - ✅ Downloads and installs [uv](https://docs.astral.sh/uv/) (Python package manager)
+   - ✅ Sets up Python dependencies
+   - ✅ Installs the Fusion 360 Add-In
+   - ✅ Configures Claude Desktop (optional)
+3. **Enable the Add-In** in Fusion 360 (see below)
+
+### Manual Installation
+
+<details>
+<summary>Click to expand manual steps</summary>
+
+**Prerequisites:** [Python 3.10+](https://python.org), [uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/JustusBraitinger/FusionMCP
-cd FusionMCP
+git clone https://github.com/eisber/Autodesk-Fusion-360-MCP-Server
+cd Autodesk-Fusion-360-MCP-Server
 
 # 2. Install Python dependencies
 cd Server
@@ -38,6 +55,14 @@ python Install_Addin.py
 
 # 5. Connect your AI assistant (see below)
 ```
+</details>
+
+### After Installation
+
+1. **Open Fusion 360** and press `Shift+S`
+2. Go to **Add-Ins** tab → Select **MCP** → Click **Run**
+3. ✅ Check **"Run on Startup"**
+4. **Restart Claude Desktop** (if configured by the installer)
 
 ---
 
@@ -193,8 +218,8 @@ This automatically:
 | :--- | :--- |
 | **test_connection** | Test connection to Fusion 360. |
 | **undo** | Undo the last action. |
-| **delete_all** | Delete all bodies. |
-| **get_telemetry_info** / **configure_telemetry** | Manage telemetry. |
+| **delete_all** | Delete all objects (bodies, sketches, construction geometry, parameters). |
+| **configure_telemetry** | Manage telemetry level. | |
 
 ---
 

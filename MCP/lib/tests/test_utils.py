@@ -3,8 +3,9 @@
 These tests validate the state, selection, and export utility functions.
 """
 
-import pytest
 from unittest.mock import MagicMock
+
+import pytest
 
 
 class TestGetModelParameters:
@@ -228,9 +229,15 @@ class TestDeleteAll:
         from lib.utils.state import delete_all
 
         mock_design.rootComponent.bRepBodies.count = 0
+        mock_design.rootComponent.sketches.count = 0
+        mock_design.rootComponent.constructionPlanes.count = 0
+        mock_design.rootComponent.constructionAxes.count = 0
+        mock_design.rootComponent.constructionPoints.count = 0
+        mock_design.userParameters.count = 0
 
-        # Should not raise
-        delete_all(mock_design, mock_ui)
+        # Should return counts dict
+        result = delete_all(mock_design, mock_ui)
+        assert result == {"bodies": 0, "sketches": 0, "planes": 0, "axes": 0, "points": 0, "parameters": 0}
 
     def test_delete_all_with_bodies(self, mock_design, mock_ui, mock_body):
         """Test delete all with bodies."""
@@ -238,10 +245,29 @@ class TestDeleteAll:
 
         mock_design.rootComponent.bRepBodies.count = 1
         mock_design.rootComponent.bRepBodies.item.return_value = mock_body
+        mock_design.rootComponent.sketches.count = 0
+        mock_design.rootComponent.constructionPlanes.count = 0
+        mock_design.rootComponent.constructionAxes.count = 0
+        mock_design.rootComponent.constructionPoints.count = 0
+        mock_design.userParameters.count = 0
 
-        delete_all(mock_design, mock_ui)
+        result = delete_all(mock_design, mock_ui)
 
         mock_design.rootComponent.features.removeFeatures.add.assert_called()
+        assert result["bodies"] == 1
+
+    def test_delete_all_bodies_only(self, mock_design, mock_ui, mock_body):
+        """Test delete with bodies=True, others=False."""
+        from lib.utils.state import delete_all
+
+        mock_design.rootComponent.bRepBodies.count = 1
+        mock_design.rootComponent.bRepBodies.item.return_value = mock_body
+
+        result = delete_all(mock_design, mock_ui, bodies=True, sketches=False, construction=False)
+
+        mock_design.rootComponent.features.removeFeatures.add.assert_called()
+        assert result["bodies"] == 1
+        assert result["sketches"] == 0
 
     def test_delete_all_error_handling(self, mock_design, mock_ui):
         """Test error handling in delete_all."""
@@ -250,10 +276,11 @@ class TestDeleteAll:
         mock_design.rootComponent.bRepBodies.count = 1
         mock_design.rootComponent.bRepBodies.item.side_effect = Exception("Error")
 
-        # Should not raise
-        delete_all(mock_design, mock_ui)
+        # Should not raise, returns partial result
+        result = delete_all(mock_design, mock_ui)
 
         mock_ui.messageBox.assert_called()
+        assert "bodies" in result
 
 
 class TestSelectBody:
@@ -388,8 +415,9 @@ class TestUtilsEquivalence:
 
     def test_get_model_parameters_signature(self):
         """Verify get_model_parameters has correct signature."""
-        from lib.utils.state import get_model_parameters
         import inspect
+
+        from lib.utils.state import get_model_parameters
 
         sig = inspect.signature(get_model_parameters)
         params = list(sig.parameters.keys())
@@ -398,8 +426,9 @@ class TestUtilsEquivalence:
 
     def test_get_current_model_state_signature(self):
         """Verify get_current_model_state has correct signature."""
-        from lib.utils.state import get_current_model_state
         import inspect
+
+        from lib.utils.state import get_current_model_state
 
         sig = inspect.signature(get_current_model_state)
         params = list(sig.parameters.keys())
@@ -408,8 +437,9 @@ class TestUtilsEquivalence:
 
     def test_delete_all_signature(self):
         """Verify delete_all has correct signature."""
-        from lib.utils.state import delete_all
         import inspect
+
+        from lib.utils.state import delete_all
 
         sig = inspect.signature(delete_all)
         params = list(sig.parameters.keys())

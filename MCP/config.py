@@ -7,7 +7,7 @@ ADDIN_NAME = "MCP"
 sample_palette_id = "MCP_Palette"
 
 # Port configuration - can be overridden via environment variable
-FUSION_MCP_PORT = int(os.environ.get('FUSION_MCP_PORT', '5000'))
+FUSION_MCP_PORT = int(os.environ.get("FUSION_MCP_PORT", "5000"))
 
 # Base URL for the Fusion 360 server
 BASE_URL = f"http://localhost:{FUSION_MCP_PORT}"
@@ -45,9 +45,7 @@ ENDPOINTS = {
 }
 
 # Request Headers
-HEADERS = {
-    "Content-Type": "application/json"
-}
+HEADERS = {"Content-Type": "application/json"}
 
 # Timeouts (in seconds)
 REQUEST_TIMEOUT = 30

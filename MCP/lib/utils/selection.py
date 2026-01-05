@@ -3,8 +3,6 @@
 This module contains functions for selecting bodies and sketches by name.
 """
 
-import adsk.core
-import adsk.fusion
 import traceback
 
 from lib.registry import task
@@ -14,12 +12,12 @@ from lib.registry import task
 def select_body(design, ui, body_name):
     """
     Selects a body by name.
-    
+
     Args:
         design: Fusion 360 design object
         ui: Fusion 360 UI object
         body_name: Name of the body to select
-        
+
     Returns:
         The body object if found, None otherwise
     """
@@ -30,9 +28,9 @@ def select_body(design, ui, body_name):
             if ui:
                 ui.messageBox(f"Body with name '{body_name}' not found.")
         return target_body
-    except:
+    except Exception:
         if ui:
-            ui.messageBox('Failed select_body:\n{}'.format(traceback.format_exc()))
+            ui.messageBox(f"Failed select_body:\n{traceback.format_exc()}")
         return None
 
 
@@ -40,12 +38,12 @@ def select_body(design, ui, body_name):
 def select_sketch(design, ui, sketch_name):
     """
     Selects a sketch by name.
-    
+
     Args:
         design: Fusion 360 design object
         ui: Fusion 360 UI object
         sketch_name: Name of the sketch to select
-        
+
     Returns:
         The sketch object if found, None otherwise
     """
@@ -56,7 +54,7 @@ def select_sketch(design, ui, sketch_name):
             if ui:
                 ui.messageBox(f"Sketch with name '{sketch_name}' not found.")
         return target_sketch
-    except:
+    except Exception:
         if ui:
-            ui.messageBox('Failed select_sketch:\n{}'.format(traceback.format_exc()))
+            ui.messageBox(f"Failed select_sketch:\n{traceback.format_exc()}")
         return None

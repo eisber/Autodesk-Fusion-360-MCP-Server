@@ -10,22 +10,18 @@
 #  UNINTERRUPTED OR ERROR FREE.
 
 import sys
-from typing import Callable
+from collections.abc import Callable
 
 import adsk.core
-from .general_utils import handle_error
 
+from .general_utils import handle_error
 
 # Global Variable to hold Event Handlers
 _handlers = []
 
 
 def add_handler(
-        event: adsk.core.Event,
-        callback: Callable,
-        *,
-        name: str = None,
-        local_handlers: list = None
+    event: adsk.core.Event, callback: Callable, *, name: str = None, local_handlers: list = None
 ):
     """Adds an event handler to the specified event.
 
@@ -40,32 +36,31 @@ def add_handler(
                       This argument must be specified by its keyword. If not
                       specified the handler is added to a global list and can
                       be cleared using the clear_handlers function. You may want
-                      to maintain your own handler list so it can be managed 
+                      to maintain your own handler list so it can be managed
                       independently for each command.
 
     :returns:
         The event handler that was created.  You don't often need this reference, but it can be useful in some cases.
-    """   
+    """
     module = sys.modules[event.__module__]
-    handler_type = module.__dict__[event.add.__annotations__['handler']]
+    handler_type = module.__dict__[event.add.__annotations__["handler"]]
     handler = _create_handler(handler_type, callback, event, name, local_handlers)
     event.add(handler)
     return handler
 
 
 def clear_handlers():
-    """Clears the global list of handlers.
-    """
+    """Clears the global list of handlers."""
     global _handlers
     _handlers = []
 
 
 def _create_handler(
-        handler_type,
-        callback: Callable,
-        event: adsk.core.Event,
-        name: str = None,
-        local_handlers: list = None
+    handler_type,
+    callback: Callable,
+    event: adsk.core.Event,
+    name: str = None,
+    local_handlers: list = None,
 ):
     handler = _define_handler(handler_type, callback, name)()
     (local_handlers if local_handlers is not None else _handlers).append(handler)
@@ -82,7 +77,7 @@ def _define_handler(handler_type, callback, name: str = None):
         def notify(self, args):
             try:
                 callback(args)
-            except:
+            except Exception:
                 handle_error(name)
 
     return Handler

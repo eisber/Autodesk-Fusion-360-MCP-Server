@@ -1,0 +1,384 @@
+# =============================================================================
+# GitHub Actions Workflow: Build Windows Installer
+# =============================================================================
+# 
+# Triggers:
+#   - On release creation (tags matching v*.*.*)
+#   - Manual dispatch with version input
+#
+# Features:
+#   - Extracts version from pyproject.toml
+#   - Builds Inno Setup installer
+#   - Optional code signing (requires secrets)
+#   - Uploads installer to GitHub Releases
+#
+# Code Signing Setup:
+#   1. Get a code signing certificate (DigiCert, Sectigo, etc.)
+#   2. Export as PFX file with password
+#   3. Base64 encode: certutil -encode cert.pfx cert.txt
+#   4. Add GitHub secrets:
+#      - WINDOWS_SIGNING_CERT: Base64-encoded PFX content
+#      - WINDOWS_SIGNING_CERT_PASSWORD: PFX password
+#
+# =============================================================================
+
+name: Build Windows Installer
+
+on:
+  release:
+    types: [created]
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_call:  # Allow calling from other workflows
+    secrets:
+      WINDOWS_SIGNING_CERT:
+        required: false
+      WINDOWS_SIGNING_CERT_PASSWORD:
+        required: false
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version override (leave empty to use pyproject.toml)'
+        required: false
+        type: string
+      sign:
+        description: 'Sign the installer'
+        required: false
+        type: boolean
+        default: true
+
+env:
+  INNO_SETUP_VERSION: '6.2.2'
+
+jobs:
+  build-installer:
+    name: Build Windows Installer
+    runs-on: windows-latest
+    
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      installer_name: ${{ steps.build.outputs.installer_name }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      # =========================================================================
+      # Version Detection
+      # =========================================================================
+      - name: Extract version from pyproject.toml
+        id: version
+        shell: pwsh
+        run: |
+          # Priority: workflow input > release tag > pyproject.toml
+          $version = ""
+          
+          # Check workflow input
+          if ("${{ github.event.inputs.version }}" -ne "") {
+            $version = "${{ github.event.inputs.version }}" -replace '^v', ''
+            Write-Host "Using workflow input version: $version"
+          }
+          # Check release tag
+          elseif ("${{ github.event_name }}" -eq "release") {
+            $version = "${{ github.event.release.tag_name }}" -replace '^v', ''
+            Write-Host "Using release tag version: $version"
+          }
+          elseif ("${{ github.ref_type }}" -eq "tag") {
+            $version = "${{ github.ref_name }}" -replace '^v', ''
+            Write-Host "Using git tag version: $version"
+          }
+          # Extract from pyproject.toml
+          else {
+            $content = Get-Content "pyproject.toml" -Raw
+            if ($content -match 'version\s*=\s*"([^"]+)"') {
+              $version = $Matches[1]
+              Write-Host "Using pyproject.toml version: $version"
+            } else {
+              $version = "0.0.0"
+              Write-Host "Warning: Could not extract version, using default"
+            }
+          }
+          
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+          echo "Version: $version"
+          
+      # =========================================================================
+      # Setup Inno Setup
+      # =========================================================================
+      - name: Cache Inno Setup
+        id: cache-inno
+        uses: actions/cache@v4
+        with:
+          path: C:\Program Files (x86)\Inno Setup 6
+          key: inno-setup-${{ env.INNO_SETUP_VERSION }}
+          
+      - name: Install Inno Setup
+        if: steps.cache-inno.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $installerUrl = "https://files.jrsoftware.org/is/6/innosetup-${{ env.INNO_SETUP_VERSION }}.exe"
+          $installerPath = "$env:TEMP\innosetup.exe"
+          
+          Write-Host "Downloading Inno Setup ${{ env.INNO_SETUP_VERSION }}..."
+          Invoke-WebRequest -Uri $installerUrl -OutFile $installerPath -UseBasicParsing
+          
+          Write-Host "Installing Inno Setup..."
+          Start-Process -FilePath $installerPath -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-" -Wait
+          
+      - name: Verify Inno Setup
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            Write-Error "Inno Setup not found at: $iscc"
+            exit 1
+          }
+          Write-Host "Inno Setup verified: $iscc"
+          
+      # =========================================================================
+      # Generate Icon (if SVG exists but ICO doesn't)
+      # =========================================================================
+      - name: Setup icon
+        shell: pwsh
+        run: |
+          $icoPath = "assets\icon.ico"
+          $svgPath = "assets\icon.svg"
+          
+          if (-not (Test-Path $icoPath)) {
+            Write-Host "ICO not found, checking for SVG..."
+            
+            if (Test-Path $svgPath) {
+              Write-Host "SVG found, attempting to generate ICO..."
+              
+              # Try using ImageMagick if available
+              $magick = Get-Command magick -ErrorAction SilentlyContinue
+              if ($magick) {
+                $sizes = @(16, 32, 48, 64, 128, 256)
+                $tempFiles = @()
+                
+                foreach ($size in $sizes) {
+                  $tempFile = "$env:TEMP\icon_$size.png"
+                  $tempFiles += $tempFile
+                  & magick convert -background none -resize "${size}x${size}" $svgPath $tempFile
+                }
+                
+                & magick convert $tempFiles $icoPath
+                $tempFiles | ForEach-Object { Remove-Item $_ -ErrorAction SilentlyContinue }
+                
+                Write-Host "Generated ICO from SVG"
+              }
+              else {
+                Write-Host "ImageMagick not available, will build without custom icon"
+                # Comment out icon line in ISS
+                $issContent = Get-Content "Fusion360MCPSetup.iss" -Raw
+                $issContent = $issContent -replace '^(SetupIconFile=.*)$', '; $1'
+                $issContent = $issContent -replace '^(UninstallDisplayIcon=.*)$', '; $1'
+                Set-Content "Fusion360MCPSetup.iss" $issContent
+              }
+            }
+            else {
+              Write-Host "No icon files found, will build without custom icon"
+              # Comment out icon references
+              $issContent = Get-Content "Fusion360MCPSetup.iss" -Raw
+              $issContent = $issContent -replace '(?m)^(SetupIconFile=.*)$', '; $1'
+              $issContent = $issContent -replace '(?m)^(UninstallDisplayIcon=.*)$', '; $1'
+              Set-Content "Fusion360MCPSetup.iss" $issContent
+            }
+          }
+          else {
+            Write-Host "Using existing ICO: $icoPath"
+          }
+          
+      # =========================================================================
+      # Build Installer
+      # =========================================================================
+      - name: Create output directory
+        run: mkdir -p dist
+        shell: bash
+        
+      - name: Compile installer
+        id: build
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          $version = "${{ steps.version.outputs.version }}"
+          
+          Write-Host "Compiling installer for version $version..."
+          
+          # Pass version as define
+          & $iscc "/DAppVersion=$version" "Fusion360MCPSetup.iss"
+          
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Compilation failed with exit code $LASTEXITCODE"
+            exit $LASTEXITCODE
+          }
+          
+          # Find the output file
+          $installer = Get-ChildItem "dist\*.exe" | Select-Object -First 1
+          if ($installer) {
+            $name = $installer.Name
+            $size = [math]::Round($installer.Length / 1MB, 2)
+            Write-Host "Built: $name ($size MB)"
+            echo "installer_name=$name" >> $env:GITHUB_OUTPUT
+            echo "installer_path=$($installer.FullName)" >> $env:GITHUB_OUTPUT
+          }
+          else {
+            Write-Error "No installer found in dist/"
+            exit 1
+          }
+          
+      # =========================================================================
+      # Code Signing (Optional)
+      # =========================================================================
+      - name: Setup code signing certificate
+        if: ${{ (github.event.inputs.sign != 'false') && (secrets.WINDOWS_SIGNING_CERT != '') }}
+        id: setup-cert
+        shell: pwsh
+        env:
+          WINDOWS_SIGNING_CERT: ${{ secrets.WINDOWS_SIGNING_CERT }}
+        run: |
+          $certPath = "$env:TEMP\signing_cert.pfx"
+          
+          # Decode base64 certificate
+          $certBytes = [Convert]::FromBase64String($env:WINDOWS_SIGNING_CERT)
+          [IO.File]::WriteAllBytes($certPath, $certBytes)
+          
+          echo "cert_path=$certPath" >> $env:GITHUB_OUTPUT
+          Write-Host "Certificate ready for signing"
+          
+      - name: Sign installer
+        if: ${{ steps.setup-cert.outputs.cert_path != '' }}
+        shell: pwsh
+        env:
+          CERT_PASSWORD: ${{ secrets.WINDOWS_SIGNING_CERT_PASSWORD }}
+        run: |
+          $installer = "${{ steps.build.outputs.installer_path }}"
+          $certPath = "${{ steps.setup-cert.outputs.cert_path }}"
+          
+          Write-Host "Signing installer..."
+          
+          # Find signtool
+          $signtool = Get-ChildItem -Path "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Recurse -Filter "signtool.exe" | 
+                      Where-Object { $_.FullName -match "x64" } | 
+                      Select-Object -First 1 -ExpandProperty FullName
+          
+          if (-not $signtool) {
+            # Try to find in PATH
+            $signtool = Get-Command signtool -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+          }
+          
+          if (-not $signtool) {
+            Write-Warning "signtool not found, skipping signing"
+            exit 0
+          }
+          
+          Write-Host "Using signtool: $signtool"
+          
+          # Sign with timestamp
+          & $signtool sign /f $certPath /p $env:CERT_PASSWORD /tr http://timestamp.digicert.com /td sha256 /fd sha256 /v $installer
+          
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Installer signed successfully"
+            
+            # Verify signature
+            & $signtool verify /pa /v $installer
+          }
+          else {
+            Write-Warning "Signing failed with exit code $LASTEXITCODE"
+          }
+          
+      - name: Cleanup certificate
+        if: always() && steps.setup-cert.outputs.cert_path != ''
+        shell: pwsh
+        run: |
+          $certPath = "${{ steps.setup-cert.outputs.cert_path }}"
+          if (Test-Path $certPath) {
+            Remove-Item $certPath -Force
+            Write-Host "Certificate cleaned up"
+          }
+          
+      # =========================================================================
+      # Upload Artifacts
+      # =========================================================================
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: FusionMCPServerSetup-${{ steps.version.outputs.version }}
+          path: dist/*.exe
+          retention-days: 30
+          if-no-files-found: error
+          
+      - name: Upload to release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # =============================================================================
+  # Test Installer (Optional)
+  # =============================================================================
+  test-installer:
+    name: Test Installer
+    needs: build-installer
+    runs-on: windows-latest
+    if: github.event_name != 'release'  # Skip for releases to speed up
+    
+    steps:
+      - name: Download installer
+        uses: actions/download-artifact@v4
+        with:
+          name: FusionMCPServerSetup-${{ needs.build-installer.outputs.version }}
+          path: installer
+          
+      - name: Test silent installation
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem "installer\*.exe" | Select-Object -First 1
+          Write-Host "Testing: $($installer.Name)"
+          
+          # Run silent install
+          $logFile = "install.log"
+          Start-Process -FilePath $installer.FullName -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /LOG=$logFile" -Wait
+          
+          # Check log
+          if (Test-Path $logFile) {
+            Write-Host "=== Installation Log (last 30 lines) ==="
+            Get-Content $logFile | Select-Object -Last 30
+          }
+          
+          # Verify installation
+          $installPath = "${env:LOCALAPPDATA}\Programs\FusionMCPServer"
+          if (-not (Test-Path $installPath)) {
+            $installPath = "${env:ProgramFiles}\FusionMCPServer"
+          }
+          
+          if (Test-Path $installPath) {
+            Write-Host "`n✅ Installation successful at: $installPath"
+            Write-Host "`nInstalled files:"
+            Get-ChildItem $installPath -Recurse -Depth 2 | Select-Object FullName
+          }
+          else {
+            Write-Warning "Installation path not found (may be expected in CI)"
+          }
+          
+      - name: Test uninstallation
+        shell: pwsh
+        run: |
+          $uninstaller = Get-ChildItem "${env:LOCALAPPDATA}\Programs\FusionMCPServer\unins*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $uninstaller) {
+            $uninstaller = Get-ChildItem "${env:ProgramFiles}\FusionMCPServer\unins*.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+          }
+          
+          if ($uninstaller) {
+            Write-Host "Running uninstaller..."
+            Start-Process -FilePath $uninstaller.FullName -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART" -Wait
+            Write-Host "✅ Uninstallation complete"
+          }
+          else {
+            Write-Host "Uninstaller not found (installation may have used different path)"
+          }

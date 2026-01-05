@@ -9,10 +9,10 @@ execute_fusion_script instead. See shared/tool_categorization.py for analysis.
 
 Usage:
     from shared import ToolDef, ParamDef, TOOL_DEFINITIONS, get_tool
-    
+
     # Get a specific tool definition
     tool = get_tool("measure_distance")
-    
+
     # List tools by category
     measurement_tools = get_tools_by_category("measurement")
 """
@@ -21,11 +21,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Literal
 
 
 class ParamType(Enum):
     """Supported parameter types."""
+
     FLOAT = "float"
     INT = "int"
     STR = "str"
@@ -37,7 +38,7 @@ class ParamType(Enum):
 @dataclass
 class ParamDef:
     """Definition of a tool parameter.
-    
+
     Attributes:
         name: Parameter name (must match in both Server and MCP)
         param_type: Python type for the parameter
@@ -45,17 +46,18 @@ class ParamDef:
         default: Default value (None means required)
         required: Whether the parameter is required (auto-computed if default is None)
     """
+
     name: str
     param_type: ParamType
     description: str
     default: Any = None
     required: bool = True
-    
+
     def __post_init__(self) -> None:
         """Auto-compute required based on default."""
         if self.default is not None:
             self.required = False
-    
+
     @property
     def python_type(self) -> type:
         """Get the Python type for this parameter."""
@@ -68,7 +70,7 @@ class ParamDef:
             ParamType.DICT: dict,
         }
         return type_map[self.param_type]
-    
+
     @property
     def type_hint(self) -> str:
         """Get the type hint string for code generation."""
@@ -86,7 +88,7 @@ class ParamDef:
 @dataclass
 class ToolDef:
     """Definition of a tool/task.
-    
+
     Attributes:
         name: Internal function name (used in registry and code)
         endpoint: HTTP endpoint name (defaults to name)
@@ -100,23 +102,24 @@ class ToolDef:
         streaming: Whether this tool streams responses (e.g., execute_fusion_script)
         is_special: Whether this tool has custom handling (not auto-generated)
     """
+
     name: str
     category: str
     description: str
-    params: List[ParamDef] = field(default_factory=list)
+    params: list[ParamDef] = field(default_factory=list)
     returns: str = ""
-    endpoint: Optional[str] = None
+    endpoint: str | None = None
     http_method: Literal["POST", "GET"] = "POST"
     use_sse: bool = True
     needs_ui: bool = True
     streaming: bool = False
     is_special: bool = False
-    
+
     def __post_init__(self) -> None:
         """Set endpoint to name if not specified."""
         if self.endpoint is None:
             self.endpoint = self.name
-    
+
     def get_signature_params(self) -> str:
         """Generate parameter signature for function definition."""
         parts = []
@@ -130,26 +133,26 @@ class ToolDef:
                 default_repr = repr(p.default)
                 parts.append(f"{p.name}: {p.type_hint} = {default_repr}")
         return ", ".join(parts)
-    
-    def get_param_names(self) -> List[str]:
+
+    def get_param_names(self) -> list[str]:
         """Get list of parameter names in order."""
         return [p.name for p in self.params]
-    
+
     def get_docstring(self) -> str:
         """Generate formatted docstring."""
         lines = [self.description, ""]
-        
+
         if self.params:
             lines.append("Args:")
             for p in self.params:
                 default_note = "" if p.required else f" (default: {p.default})"
                 lines.append(f"    {p.name}: {p.description}{default_note}")
             lines.append("")
-        
+
         if self.returns:
             lines.append("Returns:")
             lines.append(f"    {self.returns}")
-        
+
         return "\n".join(lines)
 
 
@@ -160,7 +163,7 @@ class ToolDef:
 # SCRIPTABLE operations should use execute_fusion_script instead.
 # See shared/tool_categorization.py for the full analysis.
 
-TOOL_DEFINITIONS: List[ToolDef] = [
+TOOL_DEFINITIONS: list[ToolDef] = [
     # =========================================================================
     # INFRASTRUCTURE - Essential tools that must exist
     # =========================================================================
@@ -177,7 +180,6 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         streaming=True,
         is_special=True,
     ),
-    
     ToolDef(
         name="test_connection",
         endpoint="test_connection",
@@ -187,7 +189,6 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         returns="Dictionary with success and message",
         needs_ui=False,
     ),
-    
     ToolDef(
         name="get_model_state",
         endpoint="model_state",
@@ -198,7 +199,6 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         http_method="GET",
         needs_ui=False,
     ),
-    
     ToolDef(
         name="undo",
         endpoint="undo",
@@ -208,16 +208,39 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         returns="Success message",
         needs_ui=False,
     ),
-    
     ToolDef(
         name="delete_all",
         endpoint="delete_everything",
         category="infrastructure",
-        description="Delete all bodies in the design. Use with caution.",
-        params=[],
-        returns="Success message",
+        description="Delete all objects in the current Fusion 360 session.",
+        params=[
+            ParamDef(
+                "bodies",
+                ParamType.BOOL,
+                "Delete all bodies (default: true)",
+                default=True,
+            ),
+            ParamDef(
+                "sketches",
+                ParamType.BOOL,
+                "Delete all sketches (default: true)",
+                default=True,
+            ),
+            ParamDef(
+                "construction",
+                ParamType.BOOL,
+                "Delete non-origin construction geometry (planes, axes, points) (default: true)",
+                default=True,
+            ),
+            ParamDef(
+                "parameters",
+                ParamType.BOOL,
+                "Delete user parameters (default: false)",
+                default=False,
+            ),
+        ],
+        returns="Success message with counts of deleted items",
     ),
-    
     ToolDef(
         name="cancel_fusion_task",
         endpoint="cancel_task",
@@ -230,20 +253,23 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         http_method="POST",
         is_special=True,
     ),
-    
     ToolDef(
         name="inspect_adsk_api",
         endpoint="inspect_api",
         category="infrastructure",
         description="Inspect the Autodesk Fusion 360 API to discover classes, methods, and properties.",
         params=[
-            ParamDef("path", ParamType.STR, "Dot-separated path to inspect (e.g., 'adsk.fusion.Sketch')", default="adsk.fusion"),
+            ParamDef(
+                "path",
+                ParamType.STR,
+                "Dot-separated path to inspect (e.g., 'adsk.fusion.Sketch')",
+                default="adsk.fusion",
+            ),
         ],
         returns="Dictionary with type, docstring, signature, members, example",
         http_method="POST",
         needs_ui=False,
     ),
-    
     # =========================================================================
     # INSPECTION - Query tools for model information
     # =========================================================================
@@ -259,7 +285,6 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         http_method="GET",
         needs_ui=False,
     ),
-    
     ToolDef(
         name="get_edges_info",
         endpoint="edges_info",
@@ -272,7 +297,6 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         http_method="GET",
         needs_ui=False,
     ),
-    
     ToolDef(
         name="get_vertices_info",
         endpoint="vertices_info",
@@ -285,7 +309,6 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         http_method="GET",
         needs_ui=False,
     ),
-    
     # =========================================================================
     # MEASUREMENT - Measurement tools
     # =========================================================================
@@ -306,7 +329,6 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         http_method="POST",
         needs_ui=False,
     ),
-    
     ToolDef(
         name="measure_angle",
         endpoint="measure_angle",
@@ -324,7 +346,6 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         http_method="POST",
         needs_ui=False,
     ),
-    
     ToolDef(
         name="measure_area",
         endpoint="measure_area",
@@ -338,7 +359,6 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         http_method="POST",
         needs_ui=False,
     ),
-    
     ToolDef(
         name="measure_volume",
         endpoint="measure_volume",
@@ -351,7 +371,6 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         http_method="POST",
         needs_ui=False,
     ),
-    
     ToolDef(
         name="measure_edge_length",
         endpoint="measure_edge_length",
@@ -365,7 +384,6 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         http_method="POST",
         needs_ui=False,
     ),
-    
     ToolDef(
         name="measure_body_properties",
         endpoint="measure_body_properties",
@@ -378,7 +396,6 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         http_method="POST",
         needs_ui=False,
     ),
-    
     ToolDef(
         name="measure_point_to_point",
         endpoint="measure_point_to_point",
@@ -392,7 +409,6 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         http_method="POST",
         needs_ui=False,
     ),
-    
     # =========================================================================
     # PARAMETERS - Model parameter tools
     # =========================================================================
@@ -406,7 +422,6 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         http_method="GET",
         needs_ui=False,
     ),
-    
     ToolDef(
         name="set_parameter",
         endpoint="set_parameter",
@@ -418,7 +433,6 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         ],
         returns="Success message",
     ),
-    
     ToolDef(
         name="create_user_parameter",
         endpoint="create_parameter",
@@ -427,26 +441,19 @@ TOOL_DEFINITIONS: List[ToolDef] = [
         params=[
             ParamDef("name", ParamType.STR, "Parameter name (must be unique, no spaces)"),
             ParamDef("value", ParamType.STR, "Value expression (can reference other parameters)"),
-            ParamDef("unit", ParamType.STR, "Unit type: 'mm', 'cm', 'in', 'deg', 'rad', or ''", default="mm"),
+            ParamDef(
+                "unit",
+                ParamType.STR,
+                "Unit type: 'mm', 'cm', 'in', 'deg', 'rad', or ''",
+                default="mm",
+            ),
             ParamDef("comment", ParamType.STR, "Optional description", default=""),
         ],
         returns="Dictionary with parameter_name, value, expression",
     ),
-    
     # =========================================================================
     # TELEMETRY - Telemetry tools
     # =========================================================================
-    ToolDef(
-        name="get_telemetry_info",
-        endpoint="telemetry_info",
-        category="telemetry",
-        description="Get current telemetry status and configuration.",
-        params=[],
-        returns="Dictionary with telemetry_enabled, level, session_stats",
-        http_method="GET",
-        needs_ui=False,
-    ),
-    
     ToolDef(
         name="configure_telemetry",
         endpoint="configure_telemetry",
@@ -465,56 +472,56 @@ TOOL_DEFINITIONS: List[ToolDef] = [
 # =============================================================================
 
 # Build lookup dictionaries for fast access
-_TOOLS_BY_NAME: Dict[str, ToolDef] = {t.name: t for t in TOOL_DEFINITIONS}
-_TOOLS_BY_ENDPOINT: Dict[str, ToolDef] = {t.endpoint: t for t in TOOL_DEFINITIONS}
+_TOOLS_BY_NAME: dict[str, ToolDef] = {t.name: t for t in TOOL_DEFINITIONS}
+_TOOLS_BY_ENDPOINT: dict[str, ToolDef] = {t.endpoint: t for t in TOOL_DEFINITIONS}
 
 
-def get_tool(name: str) -> Optional[ToolDef]:
+def get_tool(name: str) -> ToolDef | None:
     """Get a tool definition by function name.
-    
+
     Args:
         name: The internal function name (e.g., "measure_distance")
-        
+
     Returns:
         ToolDef or None if not found
     """
     return _TOOLS_BY_NAME.get(name)
 
 
-def get_tool_by_endpoint(endpoint: str) -> Optional[ToolDef]:
+def get_tool_by_endpoint(endpoint: str) -> ToolDef | None:
     """Get a tool definition by HTTP endpoint.
-    
+
     Args:
         endpoint: The HTTP endpoint name (e.g., "Box")
-        
+
     Returns:
         ToolDef or None if not found
     """
     return _TOOLS_BY_ENDPOINT.get(endpoint)
 
 
-def get_tools_by_category(category: str) -> List[ToolDef]:
+def get_tools_by_category(category: str) -> list[ToolDef]:
     """Get all tools in a category.
-    
+
     Args:
         category: Category name (e.g., "primitives", "sketches", "operations")
-        
+
     Returns:
         List of ToolDef objects in that category
     """
     return [t for t in TOOL_DEFINITIONS if t.category == category]
 
 
-def list_tool_names() -> List[str]:
+def list_tool_names() -> list[str]:
     """Get list of all tool names."""
     return list(_TOOLS_BY_NAME.keys())
 
 
-def list_categories() -> List[str]:
+def list_categories() -> list[str]:
     """Get list of all unique categories."""
-    return sorted(set(t.category for t in TOOL_DEFINITIONS))
+    return sorted({t.category for t in TOOL_DEFINITIONS})
 
 
-def list_endpoints() -> List[str]:
+def list_endpoints() -> list[str]:
     """Get list of all HTTP endpoints."""
     return list(_TOOLS_BY_ENDPOINT.keys())

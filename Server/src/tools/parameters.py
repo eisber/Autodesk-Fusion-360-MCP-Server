@@ -16,7 +16,7 @@ def list_parameters():
 def set_parameter(name: str, value: str):
     """
     Change the value of a parameter.
-    
+
     Args:
         name: Parameter name
         value: New value expression

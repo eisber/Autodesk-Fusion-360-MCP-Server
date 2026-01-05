@@ -6,13 +6,13 @@ All implementation logic lives in src/tools/ modules.
 
 import argparse
 import atexit
+
 from mcp.server.fastmcp import FastMCP
 
+from src import tools
 from src.instructions import SYSTEM_INSTRUCTIONS
 from src.prompts import PROMPTS
-from src import tools
 from src.telemetry import get_telemetry
-
 
 # =============================================================================
 # Initialize MCP Server
@@ -37,6 +37,7 @@ for tool_name in tools.__all__:
 # =============================================================================
 
 for name, content in PROMPTS.items():
+
     @mcp.prompt(name=name)
     def _prompt(content=content):
         return content
@@ -81,23 +82,23 @@ TELEMETRY_WARNING = """
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fusion 360 MCP Server")
     parser.add_argument(
-        "--server_type", 
-        type=str, 
-        default="sse", 
+        "--server_type",
+        type=str,
+        default="sse",
         choices=["sse", "stdio"],
-        help="Transport type for MCP server"
+        help="Transport type for MCP server",
     )
     args = parser.parse_args()
-    
+
     # Initialize telemetry and track session
     telemetry = get_telemetry()
-    
+
     # Show telemetry warning if enabled (only for non-stdio to avoid protocol issues)
     if telemetry.enabled and args.server_type != "stdio":
         print(TELEMETRY_WARNING, flush=True)
-    
+
     telemetry.track_session_start()
     atexit.register(telemetry.track_session_end)
     atexit.register(telemetry.flush)
-    
+
     mcp.run(transport=args.server_type)

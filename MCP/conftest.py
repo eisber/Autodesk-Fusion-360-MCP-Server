@@ -4,11 +4,10 @@ This file installs mock adsk modules before any test collection happens.
 Includes mocks for Fusion's threading/custom event system.
 """
 
+import queue
 import sys
 import threading
-import queue
 from unittest.mock import MagicMock
-
 
 # Global storage for mock custom event system
 _mock_event_handlers = {}  # event_name -> list of handlers
@@ -17,10 +16,10 @@ _mock_event_queue = queue.Queue()
 
 class MockCustomEventHandler:
     """Mock base class for Fusion custom event handlers."""
-    
+
     def __init__(self):
         pass
-    
+
     def notify(self, args):
         """Override in subclass to handle events."""
         pass
@@ -28,18 +27,18 @@ class MockCustomEventHandler:
 
 class MockCustomEvent:
     """Mock Fusion custom event that can have handlers added."""
-    
+
     def __init__(self, event_name: str):
         self.event_name = event_name
         self._handlers = []
-    
+
     def add(self, handler):
         """Add a handler to this event."""
         self._handlers.append(handler)
         if self.event_name not in _mock_event_handlers:
             _mock_event_handlers[self.event_name] = []
         _mock_event_handlers[self.event_name].append(handler)
-    
+
     def remove(self, handler):
         """Remove a handler from this event."""
         if handler in self._handlers:
@@ -51,7 +50,7 @@ class MockCustomEvent:
 
 class MockCustomEventArgs:
     """Mock args passed to custom event notify()."""
-    
+
     def __init__(self, additional_info: str = ""):
         self.additionalInfo = additional_info
 
@@ -74,59 +73,58 @@ def _mock_fire_custom_event(event_name: str, additional_info: str = ""):
 
 def _mock_unregister_custom_event(event_name: str):
     """Mock for app.unregisterCustomEvent()."""
-    if event_name in _mock_event_handlers:
-        del _mock_event_handlers[event_name]
+    _mock_event_handlers.pop(event_name, None)
 
 
 # Install mock adsk module IMMEDIATELY at import time (before pytest_configure)
 # This is necessary because pytest imports modules during collection
 def _install_mock_adsk():
     """Install mock adsk module immediately."""
-    if 'adsk' in sys.modules:
+    if "adsk" in sys.modules:
         return  # Already installed
-        
+
     mock_adsk = MagicMock()
     mock_core = MagicMock()
     mock_fusion = MagicMock()
-    
+
     mock_adsk.core = mock_core
     mock_adsk.fusion = mock_fusion
-    
+
     # Mock Application
     mock_app = MagicMock()
     mock_ui = MagicMock()
     mock_app.userInterface = mock_ui
-    
+
     # Mock custom event system
     mock_app.registerCustomEvent = _mock_register_custom_event
     mock_app.fireCustomEvent = _mock_fire_custom_event
     mock_app.unregisterCustomEvent = _mock_unregister_custom_event
-    
+
     mock_core.Application.get.return_value = mock_app
-    
+
     # Mock CustomEventHandler base class
     mock_core.CustomEventHandler = MockCustomEventHandler
-    
+
     # Mock PaletteDockingStates
     mock_core.PaletteDockingStates = MagicMock()
     mock_core.PaletteDockingStates.PaletteDockStateRight = 1
     mock_core.PaletteDockingStates.PaletteDockStateFloating = 0
-    
+
     # Mock LogLevels
     mock_core.LogLevels = MagicMock()
     mock_core.LogLevels.InfoLogLevel = 2
-    
+
     # Mock FeatureOperations enum
     mock_fusion.FeatureOperations = MagicMock()
     mock_fusion.FeatureOperations.NewBodyFeatureOperation = 0
     mock_fusion.FeatureOperations.JoinFeatureOperation = 1
     mock_fusion.FeatureOperations.CutFeatureOperation = 2
     mock_fusion.FeatureOperations.IntersectFeatureOperation = 3
-    
+
     # Install mocks
-    sys.modules['adsk'] = mock_adsk
-    sys.modules['adsk.core'] = mock_core
-    sys.modules['adsk.fusion'] = mock_fusion
+    sys.modules["adsk"] = mock_adsk
+    sys.modules["adsk.core"] = mock_core
+    sys.modules["adsk.fusion"] = mock_fusion
 
 
 # Install immediately when this file is imported

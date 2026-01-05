@@ -57,7 +57,6 @@ revolves.add(revolveInput)
 result = "Wine glass created!"
 ```
 """,
-
     "magnet": """
 Create a stepped magnet shape using execute_fusion_script:
 
@@ -110,7 +109,6 @@ ext3 = extrudes.addSimple(profile3, adsk.core.ValueInput.createByReal(-0.5),
 result = "Stepped magnet created with center hole!"
 ```
 """,
-
     "dna": """
 Create a DNA double helix using execute_fusion_script with spline sweeps:
 
@@ -183,7 +181,6 @@ sweep2 = sweeps.add(sweepInput2)
 result = "DNA double helix created!"
 ```
 """,
-
     "flange": """
 Create a flange with bolt holes using execute_fusion_script:
 
@@ -236,7 +233,6 @@ extrudes.addSimple(profile3, adsk.core.ValueInput.createByReal(2),
 result = "Flange with 6 bolt holes and center hole created!"
 ```
 """,
-
     "vase": """
 Create a vase using execute_fusion_script with loft:
 
@@ -285,7 +281,6 @@ shells.add(shellInput)
 result = "Vase with varying profile and hollow interior created!"
 ```
 """,
-
     "box_with_holes": """
 Create a box with holes using execute_fusion_script:
 
@@ -341,7 +336,6 @@ extrudes.addSimple(profile3, adsk.core.ValueInput.createByReal(1),
 result = "Box with 8 holes and center hole created!"
 ```
 """,
-
     "compensator": """
 Create a bellows compensator using execute_fusion_script:
 

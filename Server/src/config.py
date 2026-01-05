@@ -3,10 +3,10 @@
 import os
 
 # Port configuration - can be overridden via environment variable
-FUSION_MCP_PORT = int(os.environ.get('FUSION_MCP_PORT', '5000'))
+FUSION_MCP_PORT = int(os.environ.get("FUSION_MCP_PORT", "5000"))
 
 # Base URL for the Fusion 360 Add-In HTTP server
-BASE_URL = os.environ.get('FUSION_MCP_URL', f"http://localhost:{FUSION_MCP_PORT}")
+BASE_URL = os.environ.get("FUSION_MCP_URL", f"http://localhost:{FUSION_MCP_PORT}")
 
 
 def endpoint(name: str) -> str:
@@ -24,9 +24,7 @@ ENDPOINTS = {
 }
 
 # Request Headers
-HEADERS = {
-    "Content-Type": "application/json"
-}
+HEADERS = {"Content-Type": "application/json"}
 
 # Timeouts (in seconds)
 REQUEST_TIMEOUT = 30
@@ -36,7 +34,5 @@ SCRIPT_POLL_INTERVAL = 0.3
 # Test storage configuration
 # Tests and snapshots are stored per-project in this directory
 TEST_STORAGE_PATH = os.path.join(
-    os.environ.get('USERPROFILE', os.path.expanduser('~')),
-    'Desktop',
-    'Fusion_Tests'
+    os.environ.get("USERPROFILE", os.path.expanduser("~")), "Desktop", "Fusion_Tests"
 )

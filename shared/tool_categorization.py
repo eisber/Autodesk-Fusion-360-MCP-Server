@@ -13,19 +13,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Dict
 
 
 class ToolNecessity(Enum):
     """Classification of tool necessity."""
-    ESSENTIAL = "essential"      # Must keep - special behavior or infrastructure
+
+    ESSENTIAL = "essential"  # Must keep - special behavior or infrastructure
     CONVENIENCE = "convenience"  # Useful shortcut but scriptable
-    SCRIPTABLE = "scriptable"    # Remove - agent should use execute_fusion_script
+    SCRIPTABLE = "scriptable"  # Remove - agent should use execute_fusion_script
 
 
 @dataclass
 class ToolAnalysis:
     """Analysis of a single tool."""
+
     name: str
     necessity: ToolNecessity
     reason: str
@@ -36,7 +37,7 @@ class ToolAnalysis:
 # Tool Analysis by Category
 # =============================================================================
 
-TOOL_ANALYSIS: Dict[str, List[ToolAnalysis]] = {
+TOOL_ANALYSIS: dict[str, list[ToolAnalysis]] = {
     # =========================================================================
     # GROUP 1: INFRASTRUCTURE - Must keep
     # These provide essential infrastructure that scripts can't replace
@@ -68,7 +69,6 @@ TOOL_ANALYSIS: Dict[str, List[ToolAnalysis]] = {
             reason="Infrastructure - cancel long-running scripts",
         ),
     ],
-    
     # =========================================================================
     # GROUP 2: INSPECTION/QUERY - Keep for convenience
     # Quick queries that save token cost vs writing full scripts
@@ -118,7 +118,6 @@ result = json.dumps(faces)
             reason="Comprehensive query; saves writing full inspection",
         ),
     ],
-    
     # =========================================================================
     # GROUP 3: GEOMETRY CREATION - Mostly scriptable
     # Agent can write these as scripts; dedicated tools add token overhead
@@ -193,7 +192,6 @@ result = f"Created box: {ext.bodies.item(0).name}"
             reason="Moderately complex but scriptable",
         ),
     ],
-    
     # =========================================================================
     # GROUP 4: FEATURE OPERATIONS - Mostly scriptable
     # Standard Fusion feature operations
@@ -279,7 +277,6 @@ result = f"Extruded: {ext.bodies.item(0).name}"
             reason="MoveFeature with transform",
         ),
     ],
-    
     # =========================================================================
     # GROUP 5: PARAMETERS - Keep for workflow
     # Quick parameter operations useful in iterative design
@@ -311,7 +308,6 @@ result = f"Extruded: {ext.bodies.item(0).name}"
             reason="Simple API call",
         ),
     ],
-    
     # =========================================================================
     # GROUP 6: UTILITY - Mixed
     # =========================================================================
@@ -334,7 +330,8 @@ result = f"Extruded: {ext.bodies.item(0).name}"
 # Summary Functions
 # =============================================================================
 
-def get_essential_tools() -> List[str]:
+
+def get_essential_tools() -> list[str]:
     """Get list of tools that must remain."""
     result = []
     for tools in TOOL_ANALYSIS.values():
@@ -344,7 +341,7 @@ def get_essential_tools() -> List[str]:
     return result
 
 
-def get_convenience_tools() -> List[str]:
+def get_convenience_tools() -> list[str]:
     """Get list of tools that are convenient but optional."""
     result = []
     for tools in TOOL_ANALYSIS.values():
@@ -354,7 +351,7 @@ def get_convenience_tools() -> List[str]:
     return result
 
 
-def get_scriptable_tools() -> List[str]:
+def get_scriptable_tools() -> list[str]:
     """Get list of tools that should be removed (agent should script)."""
     result = []
     for tools in TOOL_ANALYSIS.values():
@@ -369,32 +366,32 @@ def print_summary():
     essential = get_essential_tools()
     convenience = get_convenience_tools()
     scriptable = get_scriptable_tools()
-    
+
     print("=" * 70)
     print("TOOL CATEGORIZATION SUMMARY")
     print("=" * 70)
-    
+
     print(f"\n🔒 ESSENTIAL ({len(essential)} tools) - Must keep:")
     print("   These provide infrastructure or special capabilities")
     for name in essential:
         print(f"   • {name}")
-    
+
     print(f"\n⚡ CONVENIENCE ({len(convenience)} tools) - Keep for efficiency:")
     print("   Useful shortcuts that save tokens vs writing scripts")
     for name in convenience:
         print(f"   • {name}")
-    
+
     print(f"\n📜 SCRIPTABLE ({len(scriptable)} tools) - Agent should use script:")
     print("   Remove these; agent learns by writing execute_fusion_script")
     for name in scriptable:
         print(f"   • {name}")
-    
-    print(f"\n📊 TOTALS:")
+
+    print("\n📊 TOTALS:")
     print(f"   Essential:   {len(essential):2d} tools")
-    print(f"   Convenience: {len(convenience):2d} tools")  
+    print(f"   Convenience: {len(convenience):2d} tools")
     print(f"   Scriptable:  {len(scriptable):2d} tools")
     print(f"   TOTAL:       {len(essential) + len(convenience) + len(scriptable):2d} tools")
-    
+
     print("\n💡 RECOMMENDATION:")
     print(f"   Keep {len(essential) + len(convenience)} tools")
     print(f"   Remove {len(scriptable)} tools (teach agent to script)")

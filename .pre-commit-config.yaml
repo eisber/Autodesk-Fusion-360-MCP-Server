@@ -1,0 +1,72 @@
+# Pre-commit hooks for Fusion 360 MCP Server
+# Install: pip install pre-commit && pre-commit install
+# Run manually: pre-commit run --all-files
+
+default_language_version:
+  python: python3.10
+
+repos:
+  # Standard pre-commit hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--unsafe]  # Allow custom tags
+      - id: check-json
+      - id: check-toml
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: no-commit-to-branch
+        args: [--branch, main, --branch, master]
+
+  # Ruff - Fast Python linter and formatter (replaces black, isort, flake8)
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.6
+    hooks:
+      # Linter
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        types_or: [python, pyi]
+      # Formatter (replaces black)
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  # Mypy - Static type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
+    hooks:
+      - id: mypy
+        args: [--config-file=pyproject.toml]
+        additional_dependencies:
+          - types-requests
+        # Only check files that are staged
+        pass_filenames: true
+        # Exclude test files from strict checking initially
+        exclude: ^(MCP/lib/tests/|Server/tests/)
+
+  # Security checks
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.0
+    hooks:
+      - id: bandit
+        args: [-c, pyproject.toml, -r]
+        additional_dependencies: ["bandit[toml]"]
+        exclude: ^(.*test.*|conftest)\.py$
+
+# CI configuration
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit hooks
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: [mypy]  # Skip mypy in CI (run separately for better caching)
+  submodules: false

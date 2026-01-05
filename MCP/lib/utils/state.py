@@ -4,9 +4,10 @@ This module contains functions for querying and modifying model state,
 including parameters, model state inspection, and undo/delete operations.
 """
 
+import traceback
+
 import adsk.core
 import adsk.fusion
-import traceback
 
 from lib.registry import task
 
@@ -14,10 +15,10 @@ from lib.registry import task
 def get_model_parameters(design):
     """
     Gets all model parameters (excluding user parameters).
-    
+
     Args:
         design: Fusion 360 design object
-        
+
     Returns:
         List of parameter dictionaries with Name, Value, Unit, Expression
     """
@@ -29,12 +30,14 @@ def get_model_parameters(design):
                 wert = str(param.value)
             except Exception:
                 wert = ""
-            model_params.append({
-                "Name": str(param.name),
-                "Value": wert,
-                "Unit": str(param.unit),
-                "Expression": str(param.expression) if param.expression else ""
-            })
+            model_params.append(
+                {
+                    "Name": str(param.name),
+                    "Value": wert,
+                    "Unit": str(param.unit),
+                    "Expression": str(param.expression) if param.expression else "",
+                }
+            )
     return model_params
 
 
@@ -71,8 +74,8 @@ def get_current_model_state(design):
             bb = body.boundingBox
 
             # Dimensions (W×D×H aligned with Fusion axes)
-            width = round(bb.maxPoint.x - bb.minPoint.x, 2)   # X = left-right
-            depth = round(bb.maxPoint.y - bb.minPoint.y, 2)   # Y = front-back
+            width = round(bb.maxPoint.x - bb.minPoint.x, 2)  # X = left-right
+            depth = round(bb.maxPoint.y - bb.minPoint.y, 2)  # Y = front-back
             height = round(bb.maxPoint.z - bb.minPoint.z, 2)  # Z = bottom-top
 
             # Centers
@@ -90,13 +93,18 @@ def get_current_model_state(design):
             body_list.append(body_info)
 
             # Store for relationship calculations
-            body_data.append({
-                "index": i, "name": body.name,
-                "min": (bb.minPoint.x, bb.minPoint.y, bb.minPoint.z),
-                "max": (bb.maxPoint.x, bb.maxPoint.y, bb.maxPoint.z),
-                "center": (cx, cy, cz),
-                "width": width, "depth": depth, "height": height
-            })
+            body_data.append(
+                {
+                    "index": i,
+                    "name": body.name,
+                    "min": (bb.minPoint.x, bb.minPoint.y, bb.minPoint.z),
+                    "max": (bb.maxPoint.x, bb.maxPoint.y, bb.maxPoint.z),
+                    "center": (cx, cy, cz),
+                    "width": width,
+                    "depth": depth,
+                    "height": height,
+                }
+            )
 
         # Generate spatial summary
         spatial_summary = _generate_spatial_summary(body_data)
@@ -110,10 +118,12 @@ def get_current_model_state(design):
             sketch = sketches.item(i)
             if not sketch.isLightBulbOn:
                 continue
-            sketch_list.append({
-                "name": sketch.name,
-                "index": i,
-            })
+            sketch_list.append(
+                {
+                    "name": sketch.name,
+                    "index": i,
+                }
+            )
 
         return {
             "body_count": len(body_list),
@@ -141,34 +151,34 @@ def _generate_spatial_summary(body_data):
     lines = []
 
     # Sort by Z (bottom to top) for logical reading order
-    sorted_bodies = sorted(body_data, key=lambda b: b['min'][2])
+    sorted_bodies = sorted(body_data, key=lambda b: b["min"][2])
 
     for bd in sorted_bodies:
         # Size in human terms
         size_desc = f"{bd['width']}x{bd['depth']}x{bd['height']}cm (WxDxH)"
 
         # Orientation description based on dominant dimension
-        orientation = _describe_orientation(bd['width'], bd['depth'], bd['height'])
+        orientation = _describe_orientation(bd["width"], bd["depth"], bd["height"])
 
         # Position description
         pos_parts = []
 
         # Horizontal position (X): LEFT/RIGHT
-        if bd['center'][0] > 0.05:
+        if bd["center"][0] > 0.05:
             pos_parts.append(f"{bd['center'][0]:.1f}cm right")
-        elif bd['center'][0] < -0.05:
+        elif bd["center"][0] < -0.05:
             pos_parts.append(f"{abs(bd['center'][0]):.1f}cm left")
 
         # Depth position (Y): FRONT/BACK (note: +Y is BACK in Fusion)
-        if bd['center'][1] > 0.05:
+        if bd["center"][1] > 0.05:
             pos_parts.append(f"{bd['center'][1]:.1f}cm back")
-        elif bd['center'][1] < -0.05:
+        elif bd["center"][1] < -0.05:
             pos_parts.append(f"{abs(bd['center'][1]):.1f}cm front")
 
         # Vertical position (Z): ground reference
-        if bd['min'][2] > 0.05:
+        if bd["min"][2] > 0.05:
             pos_parts.append(f"at Z={bd['min'][2]:.1f}")
-        elif bd['min'][2] < -0.05:
+        elif bd["min"][2] < -0.05:
             pos_parts.append(f"at Z={bd['min'][2]:.1f} (below origin)")
         else:
             pos_parts.append("on ground")
@@ -178,7 +188,7 @@ def _generate_spatial_summary(body_data):
         # Relationships to other bodies (max 2)
         relations = []
         for other in sorted_bodies:
-            if other['index'] == bd['index']:
+            if other["index"] == bd["index"]:
                 continue
             rel = _get_spatial_relationship(bd, other)
             if rel:
@@ -193,7 +203,7 @@ def _generate_spatial_summary(body_data):
 
 def _describe_orientation(width, depth, height):
     """Describe the orientation/shape of a body based on its dimensions.
-    
+
     Returns a human-readable description like:
     - "flat horizontal plate" (thin in Z, spread in XY)
     - "tall vertical column" (thin in XY, tall in Z)
@@ -205,42 +215,42 @@ def _describe_orientation(width, depth, height):
     w = max(width, 0.001)
     d = max(depth, 0.001)
     h = max(height, 0.001)
-    
+
     max_dim = max(w, d, h)
     min_dim = min(w, d, h)
-    
+
     # Check if roughly cubic (all dimensions within 2x of each other)
     if max_dim / min_dim < 2.0:
         return "roughly cubic"
-    
+
     # Find dominant and smallest dimensions
-    dims = [('width', w), ('depth', d), ('height', h)]
+    dims = [("width", w), ("depth", d), ("height", h)]
     dims_sorted = sorted(dims, key=lambda x: x[1], reverse=True)
     longest_name, longest_val = dims_sorted[0]
     shortest_name, shortest_val = dims_sorted[2]
-    
+
     # Check aspect ratio for classification
     ratio = longest_val / shortest_val
-    
+
     # Flat plate: height is much smaller than width and depth
-    if shortest_name == 'height' and ratio > 3:
+    if shortest_name == "height" and ratio > 3:
         return "flat horizontal plate"
-    
+
     # Tall column: height is dominant, width and depth are small
-    if longest_name == 'height' and ratio > 3:
+    if longest_name == "height" and ratio > 3:
         if w < h * 0.5 and d < h * 0.5:
             return "tall vertical column"
         else:
             return "vertically oriented"
-    
+
     # Elongated in specific direction
-    if longest_name == 'width' and ratio > 2:
+    if longest_name == "width" and ratio > 2:
         return "elongated left-right (X)"
-    if longest_name == 'depth' and ratio > 2:
+    if longest_name == "depth" and ratio > 2:
         return "elongated front-back (Y)"
-    if longest_name == 'height' and ratio > 2:
+    if longest_name == "height" and ratio > 2:
         return "elongated vertically (Z)"
-    
+
     # Default for irregular shapes
     return "irregular shape"
 
@@ -253,9 +263,9 @@ def _get_spatial_relationship(body_a, body_b):
     - FRONT/BACK = Y axis (FRONT = -Y, BACK = +Y)
     - LEFT/RIGHT = X axis
     """
-    a_min, a_max = body_a['min'], body_a['max']
-    b_min, b_max = body_b['min'], body_b['max']
-    b_name = body_b['name']
+    a_min, a_max = body_a["min"], body_a["max"]
+    b_min, b_max = body_b["min"], body_b["max"]
+    b_name = body_b["name"]
 
     # Vertical (Z) - most important for assembly understanding
     if a_min[2] >= b_max[2] - 0.01:  # A is above B
@@ -286,9 +296,14 @@ def _get_spatial_relationship(body_a, body_b):
         return f"behind {b_name}"
 
     # Check for containment
-    if (a_min[0] >= b_min[0] and a_max[0] <= b_max[0] and
-        a_min[1] >= b_min[1] and a_max[1] <= b_max[1] and
-        a_min[2] >= b_min[2] and a_max[2] <= b_max[2]):
+    if (
+        a_min[0] >= b_min[0]
+        and a_max[0] <= b_max[0]
+        and a_min[1] >= b_min[1]
+        and a_max[1] <= b_max[1]
+        and a_min[2] >= b_min[2]
+        and a_max[2] <= b_max[2]
+    ):
         return f"inside {b_name}"
 
     # Overlapping - don't clutter output
@@ -314,7 +329,7 @@ def get_faces_info(design, body_index=0):
         bodies = rootComp.bRepBodies
 
         if body_index >= bodies.count:
-            return {"error": f"Body index {body_index} out of range (max {bodies.count-1})"}
+            return {"error": f"Body index {body_index} out of range (max {bodies.count - 1})"}
 
         body = bodies.item(body_index)
         faces = body.faces
@@ -325,20 +340,22 @@ def get_faces_info(design, body_index=0):
             centroid = face.centroid
             area = face.area
             geom = face.geometry
-            face_type = geom.objectType.split('::')[-1] if geom else "Unknown"
+            face_type = geom.objectType.split("::")[-1] if geom else "Unknown"
 
-            face_list.append({
-                "index": i,
-                "type": face_type,
-                "area_cm2": round(area, 4),
-                "centroid": [round(centroid.x, 2), round(centroid.y, 2), round(centroid.z, 2)]
-            })
+            face_list.append(
+                {
+                    "index": i,
+                    "type": face_type,
+                    "area_cm2": round(area, 4),
+                    "centroid": [round(centroid.x, 2), round(centroid.y, 2), round(centroid.z, 2)],
+                }
+            )
 
         return {
             "body_name": body.name,
             "body_index": body_index,
             "face_count": faces.count,
-            "faces": face_list
+            "faces": face_list,
         }
     except Exception as e:
         return {"error": str(e), "traceback": traceback.format_exc()}
@@ -348,7 +365,7 @@ def get_faces_info(design, body_index=0):
 def set_parameter(design, ui, name, value):
     """
     Sets a parameter value by name.
-    
+
     Args:
         design: Fusion 360 design object
         ui: Fusion 360 UI object
@@ -358,16 +375,16 @@ def set_parameter(design, ui, name, value):
     try:
         param = design.allParameters.itemByName(name)
         param.expression = value
-    except:
+    except Exception:
         if ui:
-            ui.messageBox('Failed set_parameter:\n{}'.format(traceback.format_exc()))
+            ui.messageBox(f"Failed set_parameter:\n{traceback.format_exc()}")
 
 
 @task
 def undo(design, ui):
     """
     Executes an undo operation.
-    
+
     Args:
         design: Fusion 360 design object
         ui: Fusion 360 UI object
@@ -375,32 +392,100 @@ def undo(design, ui):
     try:
         app = adsk.core.Application.get()
         ui = app.userInterface
-        
-        cmd = ui.commandDefinitions.itemById('UndoCommand')
+
+        cmd = ui.commandDefinitions.itemById("UndoCommand")
         cmd.execute()
-    except:
+    except Exception:
         if ui:
-            ui.messageBox('Failed undo:\n{}'.format(traceback.format_exc()))
+            ui.messageBox(f"Failed undo:\n{traceback.format_exc()}")
 
 
 @task
-def delete_all(design, ui):
+def delete_all(
+    design,
+    ui,
+    bodies: bool = True,
+    sketches: bool = True,
+    construction: bool = True,
+    parameters: bool = False,
+):
     """
-    Removes all bodies from the design.
-    
+    Removes objects from the design.
+
     Args:
         design: Fusion 360 design object
         ui: Fusion 360 UI object
+        bodies: Delete all bodies (default: True)
+        sketches: Delete all sketches (default: True)
+        construction: Delete non-origin construction geometry (default: True)
+        parameters: Delete user parameters (default: False)
+
+    Returns:
+        dict with counts of deleted items
     """
+    deleted = {"bodies": 0, "sketches": 0, "planes": 0, "axes": 0, "points": 0, "parameters": 0}
+
     try:
         rootComp = design.rootComponent
-        bodies = rootComp.bRepBodies
-        removeFeat = rootComp.features.removeFeatures
 
-        # Delete from back to front
-        for i in range(bodies.count - 1, -1, -1):
-            body = bodies.item(i)
-            removeFeat.add(body)
-    except:
-        if ui:
-            ui.messageBox('Failed delete_all:\n{}'.format(traceback.format_exc()))
+        # Delete bodies
+        if bodies:
+            body_list = rootComp.bRepBodies
+            removeFeat = rootComp.features.removeFeatures
+            for i in range(body_list.count - 1, -1, -1):
+                body = body_list.item(i)
+                removeFeat.add(body)
+                deleted["bodies"] += 1
+
+        # Delete sketches
+        if sketches:
+            sketch_list = rootComp.sketches
+            for i in range(sketch_list.count - 1, -1, -1):
+                sketch = sketch_list.item(i)
+                sketch.deleteMe()
+                deleted["sketches"] += 1
+
+        # Delete non-origin construction geometry
+        if construction:
+            # Origin element names to skip
+            origin_planes = {"XY Plane", "XZ Plane", "YZ Plane"}
+            origin_axes = {"X Axis", "Y Axis", "Z Axis"}
+            origin_points = {"Origin"}
+
+            # Construction planes (skip origin planes)
+            planes = rootComp.constructionPlanes
+            for i in range(planes.count - 1, -1, -1):
+                plane = planes.item(i)
+                if plane.name not in origin_planes:
+                    plane.deleteMe()
+                    deleted["planes"] += 1
+
+            # Construction axes (skip origin axes)
+            axes = rootComp.constructionAxes
+            for i in range(axes.count - 1, -1, -1):
+                axis = axes.item(i)
+                if axis.name not in origin_axes:
+                    axis.deleteMe()
+                    deleted["axes"] += 1
+
+            # Construction points (skip origin point)
+            points = rootComp.constructionPoints
+            for i in range(points.count - 1, -1, -1):
+                point = points.item(i)
+                if point.name not in origin_points:
+                    point.deleteMe()
+                    deleted["points"] += 1
+
+        # Delete user parameters
+        if parameters:
+            user_params = design.userParameters
+            for i in range(user_params.count - 1, -1, -1):
+                param = user_params.item(i)
+                param.deleteMe()
+                deleted["parameters"] += 1
+
+        return deleted
+
+    except Exception:
+        deleted["error"] = traceback.format_exc()
+        return deleted

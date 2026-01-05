@@ -3,18 +3,18 @@
 
 __version__ = "0.1.0"
 
-from .client import send_request, send_get_request
-from .config import ENDPOINTS, HEADERS, BASE_URL, REQUEST_TIMEOUT
+from .client import send_get_request, send_request
+from .config import BASE_URL, ENDPOINTS, HEADERS, REQUEST_TIMEOUT
 from .instructions import SYSTEM_INSTRUCTIONS
 from .prompts import PROMPTS
 
 __all__ = [
-    "send_request",
-    "send_get_request",
+    "BASE_URL",
     "ENDPOINTS",
     "HEADERS",
-    "BASE_URL",
+    "PROMPTS",
     "REQUEST_TIMEOUT",
     "SYSTEM_INSTRUCTIONS",
-    "PROMPTS",
+    "send_get_request",
+    "send_request",
 ]

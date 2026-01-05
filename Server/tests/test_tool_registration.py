@@ -1,19 +1,22 @@
 """Tests for tool registration."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 from src import tools
 from src.tools import (
-    test_connection as connection_test_tool, get_model_state,
+    execute_fusion_script,
+    get_model_state,
     list_parameters,
-    measure_distance, execute_fusion_script,
+    measure_distance,
+    test_connection as connection_test_tool,
 )
 
 
 class TestAllExportsExist:
     """Tests that all __all__ exports exist and are callable."""
-    
+
     def test_all_exports_exist(self):
         """Verify every name in __all__ actually exists in the module."""
         missing = []
@@ -21,7 +24,7 @@ class TestAllExportsExist:
             if not hasattr(tools, name):
                 missing.append(name)
         assert not missing, f"Missing exports from __all__: {missing}"
-    
+
     def test_all_exports_callable(self):
         """Verify every exported tool is callable."""
         not_callable = []
@@ -30,7 +33,7 @@ class TestAllExportsExist:
             if func is not None and not callable(func):
                 not_callable.append(name)
         assert not not_callable, f"Non-callable exports: {not_callable}"
-    
+
     def test_no_duplicate_exports(self):
         """Verify no duplicate names in __all__."""
         seen = set()
@@ -75,14 +78,14 @@ class TestToolCallable:
         assert callable(execute_fusion_script)
 
 
-@patch('src.tools.base.requests.post')
-@patch('src.tools.base.get_telemetry')
+@patch("src.tools.base.requests.post")
+@patch("src.tools.base.get_telemetry")
 def test_connection_tool_integration(mock_telemetry, mock_post):
     """Integration test: connection test tool works with mocked server."""
     mock_telemetry.return_value = MagicMock()
     mock_response = MagicMock()
     mock_response.json.return_value = {"status": "connected"}
     mock_post.return_value = mock_response
-    
+
     result = connection_test_tool()
     assert result["status"] == "connected"

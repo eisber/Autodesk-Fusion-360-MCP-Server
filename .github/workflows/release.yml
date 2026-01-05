@@ -119,3 +119,10 @@ jobs:
             fusion-mcp-${{ steps.version.outputs.version }}.tar.gz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Build Windows Installer and attach to release
+  build-installer:
+    name: Build Windows Installer
+    needs: create-release
+    uses: ./.github/workflows/build-installer.yml
+    secrets: inherit

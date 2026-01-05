@@ -16,7 +16,7 @@ def test_connection():
 def get_model_state():
     """
     Get the current state of the Fusion 360 model.
-    
+
     Returns:
         Dictionary with:
         - body_count: Number of bodies in the model
@@ -31,10 +31,10 @@ def get_model_state():
 def get_faces_info(body_index: int = 0):
     """
     Get detailed face information for a body.
-    
+
     Args:
         body_index: Index of the body to inspect
-        
+
     Returns:
         Dictionary with:
         - face_count: Number of faces

@@ -1,10 +1,10 @@
-import os 
-import shutil 
-import subprocess
-import sys
+import os
+import shutil
 
-userdir = os.path.expanduser('~')
-addin_path = os.path.join(userdir, "AppData", "Roaming", "Autodesk", "Autodesk Fusion 360", "API", "AddIns")
+userdir = os.path.expanduser("~")
+addin_path = os.path.join(
+    userdir, "AppData", "Roaming", "Autodesk", "Autodesk Fusion 360", "API", "AddIns"
+)
 
 # Get the MCP folder relative to this script's location
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -14,7 +14,9 @@ print(f"Source folder: {source_folder}")
 print(f"Add-ins directory: {addin_path}")
 
 if not os.path.exists(source_folder):
-    raise FileNotFoundError(f"Source folder not found: {source_folder}\nMake sure you run this script from the repository root.")
+    raise FileNotFoundError(
+        f"Source folder not found: {source_folder}\nMake sure you run this script from the repository root."
+    )
 
 name = os.path.basename(source_folder)
 destination_folder = os.path.join(addin_path, name)
@@ -45,6 +47,8 @@ except OSError as e:
         print("   Note: Re-run Install_Addin.py after making changes to update.")
         print("\n   To enable symlink mode (recommended), either:")
         print("   1. Run this script as Administrator, OR")
-        print("   2. Enable Developer Mode in Windows Settings > Privacy & Security > For developers")
+        print(
+            "   2. Enable Developer Mode in Windows Settings > Privacy & Security > For developers"
+        )
     else:
         raise

@@ -18,7 +18,7 @@ def measure_distance(
 ):
     """
     Measure the minimum distance between two entities.
-    
+
     Args:
         entity1_type: Type of first entity ("face", "edge", "vertex", "body", "point")
         entity1_index: Index of first entity (for face/edge/vertex within the body)
@@ -26,7 +26,7 @@ def measure_distance(
         entity2_index: Index of second entity (for face/edge/vertex within the body)
         body1_index: Index of the body containing entity1 (default: 0)
         body2_index: Index of the body containing entity2 (default: 0)
-        
+
     Returns:
         Dictionary with:
         - distance: Minimum distance in cm
@@ -46,7 +46,7 @@ def measure_angle(
 ):
     """
     Measure the angle between two planar faces or linear edges.
-    
+
     Args:
         entity1_type: Type of first entity ("face" or "edge")
         entity1_index: Index of first entity
@@ -54,7 +54,7 @@ def measure_angle(
         entity2_index: Index of second entity
         body1_index: Index of the body containing entity1 (default: 0)
         body2_index: Index of the body containing entity2 (default: 0)
-        
+
     Returns:
         Dictionary with:
         - angle_degrees: Angle in degrees
@@ -66,11 +66,11 @@ def measure_angle(
 def measure_area(face_index: int, body_index: int = 0):
     """
     Measure the area of a specific face.
-    
+
     Args:
         face_index: Index of the face to measure
         body_index: Index of the body containing the face (default: 0)
-        
+
     Returns:
         Dictionary with:
         - area_cm2: Area in square centimeters
@@ -83,10 +83,10 @@ def measure_area(face_index: int, body_index: int = 0):
 def measure_volume(body_index: int = 0):
     """
     Measure the volume of a body.
-    
+
     Args:
         body_index: Index of the body to measure (default: 0)
-        
+
     Returns:
         Dictionary with:
         - volume_cm3: Volume in cubic centimeters
@@ -99,11 +99,11 @@ def measure_volume(body_index: int = 0):
 def measure_edge_length(edge_index: int, body_index: int = 0):
     """
     Measure the length of a specific edge.
-    
+
     Args:
         edge_index: Index of the edge to measure
         body_index: Index of the body containing the edge (default: 0)
-        
+
     Returns:
         Dictionary with:
         - length_cm: Length in centimeters
@@ -118,10 +118,10 @@ def measure_edge_length(edge_index: int, body_index: int = 0):
 def measure_body_properties(body_index: int = 0):
     """
     Get comprehensive physical properties of a body.
-    
+
     Args:
         body_index: Index of the body to measure (default: 0)
-        
+
     Returns:
         Dictionary with:
         - volume_cm3: Volume in cubic centimeters
@@ -139,11 +139,11 @@ def measure_body_properties(body_index: int = 0):
 def measure_point_to_point(point1: list, point2: list):
     """
     Measure the distance between two specific 3D points.
-    
+
     Args:
         point1: [x, y, z] coordinates of first point (in cm)
         point2: [x, y, z] coordinates of second point (in cm)
-        
+
     Returns:
         Dictionary with:
         - distance_cm: Distance in centimeters
@@ -156,10 +156,10 @@ def measure_point_to_point(point1: list, point2: list):
 def get_edges_info(body_index: int = 0):
     """
     Get detailed edge information for a body.
-    
+
     Args:
         body_index: Index of the body to inspect (default: 0)
-        
+
     Returns:
         Dictionary with:
         - edge_count: Number of edges
@@ -171,10 +171,10 @@ def get_edges_info(body_index: int = 0):
 def get_vertices_info(body_index: int = 0):
     """
     Get detailed vertex information for a body.
-    
+
     Args:
         body_index: Index of the body to inspect (default: 0)
-        
+
     Returns:
         Dictionary with:
         - vertex_count: Number of vertices

@@ -1,2 +1,27 @@
 venv/**
 **/__pycache__/**
+
+# Build outputs
+dist/
+*.exe
+
+# Logs
+*.log
+mcp_debug.log
+
+# Environment
+.env
+.env.local
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Test coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Generated icons (keep SVG source)
+assets/*.ico

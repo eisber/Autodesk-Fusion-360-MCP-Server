@@ -262,7 +262,8 @@ class TaskEventHandler(adsk.core.CustomEventHandler):
 
     def _inspect_api(self, design, path, progress_fn=None, task_id=None):
         """Inspect Fusion 360 API at the given path."""
-        inspection_script = '''
+        inspection_script = (
+            '''
 import inspect
 
 def get_type_name(obj):
@@ -301,29 +302,29 @@ def get_member_info(name, obj, include_details=False):
     """Get info about a single member."""
     type_name = get_type_name(obj)
     info = {'name': name, 'type': type_name}
-    
+
     if include_details:
         doc = getattr(obj, '__doc__', None)
         if doc:
             info['docstring'] = doc.strip()[:500]  # Truncate long docstrings
-        
+
         if type_name in ('method', 'callable', 'builtin_function_or_method'):
             sig = get_signature_str(obj)
             if sig:
                 info['signature'] = sig
-    
+
     return info
 
 def inspect_path(path):
     """Inspect an adsk module path and return detailed info."""
     parts = path.split('.')
-    
+
     if parts[0] != 'adsk':
         return {'error': f'Path must start with "adsk", got: {path}'}
-    
+
     obj = adsk
     traversed = ['adsk']
-    
+
     for part in parts[1:]:
         try:
             obj = getattr(obj, part)
@@ -334,21 +335,21 @@ def inspect_path(path):
                 'path': path,
                 'available': [m for m in dir(obj) if not m.startswith('_')][:50]
             }
-    
+
     result = {
         'path': path,
         'type': get_type_name(obj),
     }
-    
+
     doc = getattr(obj, '__doc__', None)
     if doc:
         result['docstring'] = doc.strip()[:1000]  # Truncate
-    
+
     if result['type'] in ('method', 'callable', 'builtin_function_or_method', 'class'):
         sig = get_signature_str(obj)
         if sig:
             result['signature'] = f'{parts[-1]}{sig}' if not sig.startswith(parts[-1]) else sig
-    
+
     if result['type'] in ('module', 'class', 'type'):
         members = []
         for name in dir(obj):
@@ -360,24 +361,28 @@ def inspect_path(path):
                 members.append(member_info)
             except Exception:
                 members.append({'name': name, 'type': 'unknown'})
-        
+
         result['members'] = members
         result['member_count'] = len(members)
-    
+
     if result['type'] == 'property':
         doc = result.get('docstring', '')
         if 'Returns' in doc or 'returns' in doc:
             result['returns'] = doc
-    
+
     return result
 
-result = inspect_path(''' + repr(path) + ''')
-'''
+result = inspect_path('''
+            + repr(path)
+            + """)
+"""
+        )
         return execute_fusion_script(design, inspection_script, progress_fn, task_id)
 
     def _get_class_info(self, design, class_path, progress_fn=None, task_id=None):
         """Get detailed class documentation."""
-        class_info_script = '''
+        class_info_script = (
+            """
 import inspect
 
 def get_type_name(obj):
@@ -404,14 +409,14 @@ def get_class_info(class_path):
     parts = class_path.split('.')
     if parts[0] != 'adsk':
         return {'error': f'Path must start with "adsk"'}
-    
+
     obj = adsk
     for part in parts[1:]:
         try:
             obj = getattr(obj, part)
         except AttributeError:
             return {'error': f'"{part}" not found in path'}
-    
+
     class_name = parts[-1]
     result = {
         'class_name': class_name,
@@ -419,23 +424,23 @@ def get_class_info(class_path):
         'methods': [],
         'properties': []
     }
-    
+
     doc = getattr(obj, '__doc__', None)
     if doc:
         result['docstring'] = doc.strip()
-    
+
     for name in sorted(dir(obj)):
         if name.startswith('_'):
             continue
         try:
             member = getattr(obj, name)
             type_name = get_type_name(member)
-            
+
             member_info = {'name': name}
             member_doc = getattr(member, '__doc__', None)
             if member_doc:
                 member_info['docstring'] = member_doc.strip()[:300]
-            
+
             if type_name in ('method', 'callable', 'builtin_function_or_method'):
                 sig = get_signature_str(member)
                 if sig:
@@ -445,11 +450,14 @@ def get_class_info(class_path):
                 result['properties'].append(member_info)
         except Exception:
             pass
-    
+
     return result
 
-result = get_class_info(''' + repr(class_path) + ''')
-'''
+result = get_class_info("""
+            + repr(class_path)
+            + """)
+"""
+        )
         return execute_fusion_script(design, class_info_script, progress_fn, task_id)
 
 
@@ -753,11 +761,16 @@ def execute_fusion_script(design, script_code, progress_fn=None, task_id=None):
                 return bodies.item(index_or_name) if index_or_name < bodies.count else None
             return bodies.itemByName(index_or_name)
 
-        def delete_all_bodies(
-            bodies=True, sketches=True, construction=True, parameters=False
-        ):
+        def delete_all_bodies(bodies=True, sketches=True, construction=True, parameters=False):
             """Delete objects in the design."""
-            deleted = {"bodies": 0, "sketches": 0, "planes": 0, "axes": 0, "points": 0, "parameters": 0}
+            deleted = {
+                "bodies": 0,
+                "sketches": 0,
+                "planes": 0,
+                "axes": 0,
+                "points": 0,
+                "parameters": 0,
+            }
 
             if bodies:
                 body_list = rootComp.bRepBodies
@@ -884,7 +897,7 @@ def execute_fusion_script(design, script_code, progress_fn=None, task_id=None):
             script_result_value = exec_namespace["result"]
             # Keep dicts/lists as-is for proper JSON serialization
             # Convert other types to string representation
-            if isinstance(script_result_value, (dict, list)):
+            if isinstance(script_result_value, dict | list):
                 result["return_value"] = script_result_value
             else:
                 result["return_value"] = str(script_result_value)
@@ -910,7 +923,7 @@ def execute_fusion_script(design, script_code, progress_fn=None, task_id=None):
         result["stderr"] = sys.stderr.getvalue()
         sys.stdout = old_stdout
         sys.stderr = old_stderr
-        
+
         # Get compact model state (just summary, not full details)
         full_state = get_current_model_state(design)
         result["model_state"] = {
@@ -921,8 +934,7 @@ def execute_fusion_script(design, script_code, progress_fn=None, task_id=None):
         }
 
         # Filter out empty/null values to save tokens
-        result = {k: v for k, v in result.items() 
-                  if v is not None and v != "" and v != []}
+        result = {k: v for k, v in result.items() if v is not None and v not in ("", [])}
 
         with script_result_lock:
             script_result = result
@@ -1026,7 +1038,11 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
         elif path == "/get_model_state":
             self._set_headers()
             active_design = self._get_active_design()
-            state = get_current_model_state(active_design) if active_design else {"error": "No active design"}
+            state = (
+                get_current_model_state(active_design)
+                if active_design
+                else {"error": "No active design"}
+            )
             self.wfile.write(json.dumps(state).encode())
 
         elif path == "/script_result":
@@ -1061,7 +1077,9 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
 
         elif path == "/get_sketch_constraints":
             self._set_headers()
-            result = get_sketch_constraints(self._get_active_design(), get_param("sketch_index", -1))
+            result = get_sketch_constraints(
+                self._get_active_design(), get_param("sketch_index", -1)
+            )
             self.wfile.write(json.dumps(result).encode())
 
         elif path == "/get_sketch_dimensions":
@@ -1166,11 +1184,11 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
         # Special case: test_connection doesn't need task queue
         if command == "test_connection":
             self._set_headers()
-            self.wfile.write(json.dumps({
-                "success": True,
-                "message": "Connection successful",
-                "version": __version__
-            }).encode())
+            self.wfile.write(
+                json.dumps(
+                    {"success": True, "message": "Connection successful", "version": __version__}
+                ).encode()
+            )
             return
 
         # Create tracked task

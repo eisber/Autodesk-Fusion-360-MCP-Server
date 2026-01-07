@@ -32,50 +32,39 @@ jobs:
         run: ruff format --check --diff .
 
   test-server:
-    name: Test Server (${{ matrix.os }} / Python ${{ matrix.python-version }})
+    name: Test Server (${{ matrix.os }} / Node ${{ matrix.node-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest]
-        python-version: ['3.11', '3.12', '3.13']
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node-version: ['18', '20', '22']
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
         with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Cache pip dependencies
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-server-${{ matrix.python-version }}-${{ hashFiles('Server/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-server-${{ matrix.python-version }}-
-            ${{ runner.os }}-pip-server-
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+          cache-dependency-path: Server-TS/package-lock.json
 
       - name: Install Server dependencies
-        working-directory: Server
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-cov pytest-mock
+        working-directory: Server-TS
+        run: npm ci
 
       - name: Run Server tests
-        working-directory: Server
-        run: |
-          python -m pytest tests/ -v --tb=short --cov=src --cov-report=xml --cov-report=term-missing
+        working-directory: Server-TS
+        run: npm test
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
-        if: matrix.python-version == '3.11' && matrix.os == 'windows-latest'
+        if: matrix.node-version == '20' && matrix.os == 'ubuntu-latest'
         with:
           name: coverage-server
-          path: Server/coverage.xml
+          path: Server-TS/coverage/
 
   test-mcp-addin:
     name: Test MCP Add-In (${{ matrix.os }} / Python ${{ matrix.python-version }})
@@ -129,20 +118,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: Server-TS/package-lock.json
+
+      - name: Install Server dependencies
+        working-directory: Server-TS
+        run: npm ci
+
+      - name: Run TypeScript type check
+        working-directory: Server-TS
+        run: npx tsc --noEmit
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install Python type checking tools
         run: |
           python -m pip install --upgrade pip
           pip install mypy types-requests
-          pip install -r Server/requirements.txt
-
-      - name: Run mypy on Server
-        working-directory: Server
-        run: mypy src/ --config-file=../pyproject.toml
 
       - name: Run mypy on MCP lib
         working-directory: MCP
@@ -166,11 +165,10 @@ jobs:
           pip install bandit safety
 
       - name: Run Bandit security scan
-        run: bandit -r Server/src MCP/lib -f json -o bandit-report.json || true
+        run: bandit -r MCP/lib -f json -o bandit-report.json || true
 
       - name: Check dependencies for vulnerabilities
         run: |
-          pip install -r Server/requirements.txt
           safety check --full-report || true
         continue-on-error: true
 
@@ -189,20 +187,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          python-version: '3.11'
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: Server-TS/package-lock.json
 
-      - name: Verify Server can be imported
-        working-directory: Server
+      - name: Install and build Server
+        working-directory: Server-TS
         run: |
-          pip install -r requirements.txt
-          python -c "from src import config; print('Server imports OK')"
+          npm ci
+          npm run build
 
       - name: Verify project structure
         run: |
-          test -f Server/MCP_Server.py
+          test -f Server-TS/dist/index.js
           test -f MCP/MCP.py
           test -f MCP/MCP.manifest
           test -f Install_Addin.py

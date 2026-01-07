@@ -95,7 +95,7 @@ ignore = [
 # Entry points and command handlers have specific patterns
 "MCP/commands/**/*.py" = ["ARG", "PLR", "F841"]
 # MCP lib has existing patterns that should not be changed
-"MCP/lib/**/*.py" = ["F841", "PLW2901", "ARG005"]
+"MCP/lib/**/*.py" = ["F841", "PLW2901", "ARG005", "SIM103"]
 # Scripts may use conditional imports and path manipulation
 "scripts/**/*.py" = ["PTH", "F401", "B007", "B905", "SIM102", "W293"]
 # Projects folder - standalone scripts

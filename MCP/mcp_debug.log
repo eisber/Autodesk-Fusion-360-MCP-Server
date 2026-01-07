@@ -1607,3 +1607,353 @@
 2026-01-05 18:15:55 -   POST content_length: 1516
 2026-01-05 18:15:55 -   POST command: execute_script
 2026-01-05 18:15:55 - [HTTP] "POST /execute_script HTTP/1.1" 202 -
+2026-01-05 18:20:22 - MCP.py loading, __file__=E:/work/Autodesk-Fusion-360-MCP-Server/MCP/MCP.py, _THIS_DIR=E:\work\Autodesk-Fusion-360-MCP-Server\MCP
+2026-01-05 18:20:22 - sys.path=['E:\\work\\Autodesk-Fusion-360-MCP-Server\\MCP', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2\\Python\\lib', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2\\Python\\lib\\site-packages']...
+2026-01-05 18:20:22 - All lib imports successful
+2026-01-05 18:20:22 - Registered tasks: ['check_all_interferences', 'check_interference', 'create_construction_axis', 'create_construction_point', 'create_midplane', 'create_offset_plane', 'create_plane_at_angle', 'create_user_parameter', 'delete_all', 'delete_user_parameter', 'get_edges_info', 'get_mass_properties', 'get_sketch_constraints', 'get_sketch_dimensions', 'get_sketch_info', 'get_timeline_info', 'get_vertices_info', 'list_construction_geometry', 'measure_angle', 'measure_area', 'measure_body_properties', 'measure_distance', 'measure_edge_length', 'measure_point_to_point', 'measure_volume', 'rollback_to_end', 'rollback_to_feature', 'select_body', 'select_sketch', 'set_parameter', 'suppress_feature', 'undo']
+2026-01-05 18:20:22 - Starting ThreadingHTTPServer on port 5000
+2026-01-06 22:01:38 - MCP.py loading, __file__=C:/Users/marcozo/AppData/Roaming/Autodesk/Autodesk Fusion 360/API/AddIns/MCP/MCP.py, _THIS_DIR=C:\Users\marcozo\AppData\Roaming\Autodesk\Autodesk Fusion 360\API\AddIns\MCP
+2026-01-06 22:01:38 - sys.path=['C:\\Users\\marcozo\\AppData\\Roaming\\Autodesk\\Autodesk Fusion 360\\API\\AddIns\\MCP', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2\\Python\\lib', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2\\Python\\lib\\site-packages']...
+2026-01-06 22:01:38 - All lib imports successful
+2026-01-06 22:01:38 - Registered tasks: ['check_all_interferences', 'check_interference', 'create_construction_axis', 'create_construction_point', 'create_midplane', 'create_offset_plane', 'create_plane_at_angle', 'create_user_parameter', 'delete_all', 'delete_user_parameter', 'get_edges_info', 'get_mass_properties', 'get_sketch_constraints', 'get_sketch_dimensions', 'get_sketch_info', 'get_timeline_info', 'get_vertices_info', 'list_construction_geometry', 'measure_angle', 'measure_area', 'measure_body_properties', 'measure_distance', 'measure_edge_length', 'measure_point_to_point', 'measure_volume', 'rollback_to_end', 'rollback_to_feature', 'select_body', 'select_sketch', 'set_parameter', 'suppress_feature', 'undo']
+2026-01-06 22:01:38 - Starting ThreadingHTTPServer on port 5000
+2026-01-06 22:31:07 - GET request: /events
+2026-01-06 22:31:07 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:31:07 - POST request: /test_connection
+2026-01-06 22:31:07 -   POST content_length: 29
+2026-01-06 22:31:07 -   POST command: test_connection
+2026-01-06 22:31:07 - [HTTP] "POST /test_connection HTTP/1.1" 200 -
+2026-01-06 22:33:29 - GET request: /events
+2026-01-06 22:33:29 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:33:29 - POST request: /execute
+2026-01-06 22:33:29 -   POST content_length: 4725
+2026-01-06 22:33:29 -   POST command: execute_script
+2026-01-06 22:33:29 - [HTTP] "POST /execute HTTP/1.1" 202 -
+2026-01-06 22:33:49 - GET request: /events
+2026-01-06 22:33:49 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:33:49 - POST request: /execute
+2026-01-06 22:33:49 -   POST content_length: 4632
+2026-01-06 22:33:49 -   POST command: execute_script
+2026-01-06 22:33:49 - [HTTP] "POST /execute HTTP/1.1" 202 -
+2026-01-06 22:33:54 - GET request: /events
+2026-01-06 22:33:54 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:33:54 - POST request: /inspect_api
+2026-01-06 22:33:54 -   POST content_length: 57
+2026-01-06 22:33:54 -   POST command: inspect_api
+2026-01-06 22:33:54 - [HTTP] "POST /inspect_api HTTP/1.1" 400 -
+2026-01-06 22:34:10 - GET request: /events
+2026-01-06 22:34:10 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:34:10 - POST request: /execute
+2026-01-06 22:34:10 -   POST content_length: 3371
+2026-01-06 22:34:10 -   POST command: execute_script
+2026-01-06 22:34:10 - [HTTP] "POST /execute HTTP/1.1" 202 -
+2026-01-06 22:34:25 - GET request: /events
+2026-01-06 22:34:25 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:34:25 - POST request: /execute
+2026-01-06 22:34:25 -   POST content_length: 3027
+2026-01-06 22:34:25 -   POST command: execute_script
+2026-01-06 22:34:25 - [HTTP] "POST /execute HTTP/1.1" 202 -
+2026-01-06 22:34:45 - GET request: /events
+2026-01-06 22:34:45 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:34:45 - POST request: /execute
+2026-01-06 22:34:45 -   POST content_length: 2785
+2026-01-06 22:34:45 -   POST command: execute_script
+2026-01-06 22:34:45 - [HTTP] "POST /execute HTTP/1.1" 202 -
+2026-01-06 22:35:02 - GET request: /events
+2026-01-06 22:35:02 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:35:02 - POST request: /execute
+2026-01-06 22:35:02 -   POST content_length: 2830
+2026-01-06 22:35:02 -   POST command: execute_script
+2026-01-06 22:35:02 - [HTTP] "POST /execute HTTP/1.1" 202 -
+2026-01-06 22:38:37 - MCP.py loading, __file__=C:/Users/marcozo/AppData/Roaming/Autodesk/Autodesk Fusion 360/API/AddIns/MCP/MCP.py, _THIS_DIR=C:\Users\marcozo\AppData\Roaming\Autodesk\Autodesk Fusion 360\API\AddIns\MCP
+2026-01-06 22:38:37 - sys.path=['C:\\Users\\marcozo\\AppData\\Roaming\\Autodesk\\Autodesk Fusion 360\\API\\AddIns\\MCP', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2\\Python\\lib', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2\\Python\\lib\\site-packages']...
+2026-01-06 22:38:37 - All lib imports successful
+2026-01-06 22:38:37 - Registered tasks: ['check_all_interferences', 'check_interference', 'create_construction_axis', 'create_construction_point', 'create_midplane', 'create_offset_plane', 'create_plane_at_angle', 'create_user_parameter', 'delete_all', 'delete_user_parameter', 'get_edges_info', 'get_mass_properties', 'get_sketch_constraints', 'get_sketch_dimensions', 'get_sketch_info', 'get_timeline_info', 'get_vertices_info', 'list_construction_geometry', 'measure_angle', 'measure_area', 'measure_body_properties', 'measure_distance', 'measure_edge_length', 'measure_point_to_point', 'measure_volume', 'rollback_to_end', 'rollback_to_feature', 'select_body', 'select_sketch', 'set_parameter', 'suppress_feature', 'undo']
+2026-01-06 22:38:37 - Starting ThreadingHTTPServer on port 5000
+2026-01-06 22:41:10 - GET request: /events
+2026-01-06 22:41:10 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:41:10 - POST request: /inspect_api
+2026-01-06 22:41:10 -   POST content_length: 57
+2026-01-06 22:41:10 -   POST command: inspect_api
+2026-01-06 22:41:10 - [HTTP] "POST /inspect_api HTTP/1.1" 400 -
+2026-01-06 22:44:09 - MCP.py loading, __file__=E:/work/Autodesk-Fusion-360-MCP-Server/MCP/MCP.py, _THIS_DIR=E:\work\Autodesk-Fusion-360-MCP-Server\MCP
+2026-01-06 22:44:09 - sys.path=['E:\\work\\Autodesk-Fusion-360-MCP-Server\\MCP', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2\\Python\\lib', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2\\Python\\lib\\site-packages']...
+2026-01-06 22:44:09 - All lib imports successful
+2026-01-06 22:44:09 - Registered tasks: ['check_all_interferences', 'check_interference', 'create_construction_axis', 'create_construction_point', 'create_midplane', 'create_offset_plane', 'create_plane_at_angle', 'create_user_parameter', 'delete_all', 'delete_user_parameter', 'get_edges_info', 'get_mass_properties', 'get_sketch_constraints', 'get_sketch_dimensions', 'get_sketch_info', 'get_timeline_info', 'get_vertices_info', 'list_construction_geometry', 'measure_angle', 'measure_area', 'measure_body_properties', 'measure_distance', 'measure_edge_length', 'measure_point_to_point', 'measure_volume', 'rollback_to_end', 'rollback_to_feature', 'select_body', 'select_sketch', 'set_parameter', 'suppress_feature', 'undo']
+2026-01-06 22:44:09 - Starting ThreadingHTTPServer on port 5000
+2026-01-06 22:44:36 - GET request: /events
+2026-01-06 22:44:36 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:44:36 - POST request: /inspect_api
+2026-01-06 22:44:36 -   POST content_length: 57
+2026-01-06 22:44:36 -   POST command: inspect_api
+2026-01-06 22:44:36 - [HTTP] "POST /inspect_api HTTP/1.1" 400 -
+2026-01-06 22:46:00 - MCP.py loading, __file__=E:/work/Autodesk-Fusion-360-MCP-Server/MCP/MCP.py, _THIS_DIR=E:\work\Autodesk-Fusion-360-MCP-Server\MCP
+2026-01-06 22:46:00 - sys.path=['E:\\work\\Autodesk-Fusion-360-MCP-Server\\MCP', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2\\Python\\lib', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2\\Python\\lib\\site-packages']...
+2026-01-06 22:46:00 - All lib imports successful
+2026-01-06 22:46:00 - Registered tasks: ['check_all_interferences', 'check_interference', 'create_construction_axis', 'create_construction_point', 'create_midplane', 'create_offset_plane', 'create_plane_at_angle', 'create_user_parameter', 'delete_all', 'delete_user_parameter', 'get_edges_info', 'get_mass_properties', 'get_sketch_constraints', 'get_sketch_dimensions', 'get_sketch_info', 'get_timeline_info', 'get_vertices_info', 'list_construction_geometry', 'measure_angle', 'measure_area', 'measure_body_properties', 'measure_distance', 'measure_edge_length', 'measure_point_to_point', 'measure_volume', 'rollback_to_end', 'rollback_to_feature', 'select_body', 'select_sketch', 'set_parameter', 'suppress_feature', 'undo']
+2026-01-06 22:46:00 - Starting ThreadingHTTPServer on port 5000
+2026-01-06 22:46:11 - GET request: /events
+2026-01-06 22:46:11 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:46:11 - POST request: /inspect_api
+2026-01-06 22:46:11 -   POST content_length: 57
+2026-01-06 22:46:11 -   POST command: inspect_api
+2026-01-06 22:46:11 - [HTTP] "POST /inspect_api HTTP/1.1" 202 -
+2026-01-06 22:46:39 - GET request: /events
+2026-01-06 22:46:39 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:46:39 - GET request: /model_state
+2026-01-06 22:46:39 - [HTTP] "GET /model_state HTTP/1.1" 404 -
+2026-01-06 22:46:39 - GET request: /list_parameters
+2026-01-06 22:46:39 - [HTTP] "GET /list_parameters HTTP/1.1" 200 -
+2026-01-06 22:46:39 - POST request: /test_connection
+2026-01-06 22:46:39 -   POST content_length: 29
+2026-01-06 22:46:39 -   POST command: test_connection
+2026-01-06 22:46:39 - [HTTP] "POST /test_connection HTTP/1.1" 200 -
+2026-01-06 22:46:44 - GET request: /events
+2026-01-06 22:46:44 - GET request: /list_construction
+2026-01-06 22:46:44 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:46:44 - [HTTP] "GET /list_construction HTTP/1.1" 404 -
+2026-01-06 22:46:44 - GET request: /events
+2026-01-06 22:46:44 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:46:44 - POST request: /check_interferences
+2026-01-06 22:46:44 -   POST content_length: 33
+2026-01-06 22:46:44 -   POST command: check_interferences
+2026-01-06 22:46:44 - [HTTP] "POST /check_interferences HTTP/1.1" 400 -
+2026-01-06 22:46:44 - POST request: /get_class_info
+2026-01-06 22:46:44 -   POST content_length: 62
+2026-01-06 22:46:44 -   POST command: get_class_info
+2026-01-06 22:46:44 - [HTTP] "POST /get_class_info HTTP/1.1" 202 -
+2026-01-06 22:51:19 - GET request: /events
+2026-01-06 22:51:19 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:51:19 - GET request: /model_state
+2026-01-06 22:51:19 - [HTTP] "GET /model_state HTTP/1.1" 404 -
+2026-01-06 22:51:19 - GET request: /list_parameters
+2026-01-06 22:51:19 - [HTTP] "GET /list_parameters HTTP/1.1" 200 -
+2026-01-06 22:51:19 - GET request: /list_construction
+2026-01-06 22:51:19 - [HTTP] "GET /list_construction HTTP/1.1" 404 -
+2026-01-06 22:51:19 - POST request: /test_connection
+2026-01-06 22:51:19 -   POST content_length: 29
+2026-01-06 22:51:19 -   POST command: test_connection
+2026-01-06 22:51:19 - [HTTP] "POST /test_connection HTTP/1.1" 200 -
+2026-01-06 22:51:23 - GET request: /events
+2026-01-06 22:51:23 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:51:23 - GET request: /events
+2026-01-06 22:51:23 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:51:23 - GET request: /events
+2026-01-06 22:51:23 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:51:23 - POST request: /inspect_api
+2026-01-06 22:51:23 -   POST content_length: 46
+2026-01-06 22:51:23 -   POST command: inspect_api
+2026-01-06 22:51:23 - [HTTP] "POST /inspect_api HTTP/1.1" 202 -
+2026-01-06 22:51:23 - POST request: /get_class_info
+2026-01-06 22:51:23 -   POST content_length: 62
+2026-01-06 22:51:23 -   POST command: get_class_info
+2026-01-06 22:51:23 - POST request: /check_interferences
+2026-01-06 22:51:23 - [HTTP] "POST /get_class_info HTTP/1.1" 202 -
+2026-01-06 22:51:23 -   POST content_length: 33
+2026-01-06 22:51:23 -   POST command: check_interferences
+2026-01-06 22:51:23 - [HTTP] "POST /check_interferences HTTP/1.1" 400 -
+2026-01-06 22:52:14 - GET request: /events
+2026-01-06 22:52:14 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:52:14 - POST request: /inspect_api
+2026-01-06 22:52:14 -   POST content_length: 53
+2026-01-06 22:52:14 -   POST command: inspect_api
+2026-01-06 22:52:14 - [HTTP] "POST /inspect_api HTTP/1.1" 202 -
+2026-01-06 22:54:47 - GET request: /model_state
+2026-01-06 22:54:47 - [HTTP] "GET /model_state HTTP/1.1" 404 -
+2026-01-06 22:54:50 - GET request: /list_construction
+2026-01-06 22:54:50 - [HTTP] "GET /list_construction HTTP/1.1" 404 -
+2026-01-06 22:54:53 - GET request: /events
+2026-01-06 22:54:53 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:54:53 - POST request: /check_interferences
+2026-01-06 22:54:53 -   POST content_length: 33
+2026-01-06 22:54:53 -   POST command: check_interferences
+2026-01-06 22:54:53 - [HTTP] "POST /check_interferences HTTP/1.1" 400 -
+2026-01-06 22:55:15 - GET request: /events
+2026-01-06 22:55:15 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:55:15 - POST request: /test_connection
+2026-01-06 22:55:15 -   POST content_length: 29
+2026-01-06 22:55:15 -   POST command: test_connection
+2026-01-06 22:55:15 - [HTTP] "POST /test_connection HTTP/1.1" 200 -
+2026-01-06 22:55:18 - GET request: /list_parameters
+2026-01-06 22:55:18 - [HTTP] "GET /list_parameters HTTP/1.1" 200 -
+2026-01-06 22:55:23 - GET request: /events
+2026-01-06 22:55:23 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 22:55:23 - POST request: /inspect_api
+2026-01-06 22:55:24 -   POST content_length: 39
+2026-01-06 22:55:24 -   POST command: inspect_api
+2026-01-06 22:55:24 - [HTTP] "POST /inspect_api HTTP/1.1" 202 -
+2026-01-06 22:55:41 - MCP.py loading, __file__=E:/work/Autodesk-Fusion-360-MCP-Server/MCP/MCP.py, _THIS_DIR=E:\work\Autodesk-Fusion-360-MCP-Server\MCP
+2026-01-06 22:55:41 - sys.path=['E:\\work\\Autodesk-Fusion-360-MCP-Server\\MCP', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2\\Python\\lib', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2\\Python\\lib\\site-packages']...
+2026-01-06 22:55:41 - All lib imports successful
+2026-01-06 22:55:41 - Registered tasks: ['check_all_interferences', 'check_interference', 'create_construction_axis', 'create_construction_point', 'create_midplane', 'create_offset_plane', 'create_plane_at_angle', 'create_user_parameter', 'delete_all', 'delete_user_parameter', 'get_edges_info', 'get_mass_properties', 'get_sketch_constraints', 'get_sketch_dimensions', 'get_sketch_info', 'get_timeline_info', 'get_vertices_info', 'list_construction_geometry', 'measure_angle', 'measure_area', 'measure_body_properties', 'measure_distance', 'measure_edge_length', 'measure_point_to_point', 'measure_volume', 'rollback_to_end', 'rollback_to_feature', 'select_body', 'select_sketch', 'set_parameter', 'suppress_feature', 'undo']
+2026-01-06 22:55:41 - Starting ThreadingHTTPServer on port 5000
+2026-01-06 22:57:29 - MCP.py loading, __file__=E:/work/Autodesk-Fusion-360-MCP-Server/MCP/MCP.py, _THIS_DIR=E:\work\Autodesk-Fusion-360-MCP-Server\MCP
+2026-01-06 22:57:29 - sys.path=['E:\\work\\Autodesk-Fusion-360-MCP-Server\\MCP', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2\\Python\\lib', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2', 'C:\\Users\\marcozo\\AppData\\Local\\Autodesk\\webdeploy\\production\\2b84ec48843dc39cc73fec4274fad44f45968ec2\\Python\\lib\\site-packages']...
+2026-01-06 22:57:29 - All lib imports successful
+2026-01-06 22:57:29 - Registered tasks: ['check_all_interferences', 'check_interference', 'create_construction_axis', 'create_construction_point', 'create_midplane', 'create_offset_plane', 'create_plane_at_angle', 'create_user_parameter', 'delete_all', 'delete_user_parameter', 'get_edges_info', 'get_mass_properties', 'get_sketch_constraints', 'get_sketch_dimensions', 'get_sketch_info', 'get_timeline_info', 'get_vertices_info', 'list_construction_geometry', 'measure_angle', 'measure_area', 'measure_body_properties', 'measure_distance', 'measure_edge_length', 'measure_point_to_point', 'measure_volume', 'rollback_to_end', 'rollback_to_feature', 'select_body', 'select_sketch', 'set_parameter', 'suppress_feature', 'undo']
+2026-01-06 22:57:29 - Starting ThreadingHTTPServer on port 5000
+2026-01-06 22:59:28 - GET request: /get_model_state
+2026-01-06 22:59:28 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-06 22:59:36 - GET request: /list_construction_geometry
+2026-01-06 22:59:36 - [HTTP] "GET /list_construction_geometry HTTP/1.1" 200 -
+2026-01-06 22:59:41 - GET request: /check_all_interferences
+2026-01-06 22:59:41 - [HTTP] "GET /check_all_interferences HTTP/1.1" 200 -
+2026-01-06 23:00:21 - GET request: /events
+2026-01-06 23:00:21 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 23:00:21 - POST request: /test_connection
+2026-01-06 23:00:21 -   POST content_length: 29
+2026-01-06 23:00:21 -   POST command: test_connection
+2026-01-06 23:00:21 - [HTTP] "POST /test_connection HTTP/1.1" 200 -
+2026-01-06 23:00:24 - GET request: /get_model_state
+2026-01-06 23:00:24 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-06 23:00:27 - GET request: /list_construction_geometry
+2026-01-06 23:00:27 - [HTTP] "GET /list_construction_geometry HTTP/1.1" 200 -
+2026-01-06 23:00:29 - GET request: /check_all_interferences
+2026-01-06 23:00:29 - [HTTP] "GET /check_all_interferences HTTP/1.1" 200 -
+2026-01-06 23:00:32 - GET request: /list_parameters
+2026-01-06 23:00:32 - [HTTP] "GET /list_parameters HTTP/1.1" 200 -
+2026-01-06 23:00:35 - GET request: /events
+2026-01-06 23:00:35 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 23:00:35 - POST request: /inspect_api
+2026-01-06 23:00:35 -   POST content_length: 46
+2026-01-06 23:00:35 -   POST command: inspect_api
+2026-01-06 23:00:35 - [HTTP] "POST /inspect_api HTTP/1.1" 202 -
+2026-01-06 23:01:35 - GET request: /events
+2026-01-06 23:01:35 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 23:01:35 - POST request: /execute
+2026-01-06 23:01:35 -   POST content_length: 758
+2026-01-06 23:01:35 -   POST command: execute_script
+2026-01-06 23:01:35 - [HTTP] "POST /execute HTTP/1.1" 202 -
+2026-01-06 23:01:41 - GET request: /get_model_state
+2026-01-06 23:01:41 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-06 23:01:42 - GET request: /get_faces_info?body_index=0
+2026-01-06 23:01:42 - GET request: /get_edges_info?body_index=0
+2026-01-06 23:01:42 - [HTTP] "GET /get_faces_info?body_index=0 HTTP/1.1" 200 -
+2026-01-06 23:01:42 - [HTTP] "GET /get_edges_info?body_index=0 HTTP/1.1" 200 -
+2026-01-06 23:01:42 - GET request: /get_vertices_info?body_index=0
+2026-01-06 23:01:42 - [HTTP] "GET /get_vertices_info?body_index=0 HTTP/1.1" 200 -
+2026-01-06 23:01:51 - GET request: /events
+2026-01-06 23:01:51 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 23:01:51 - GET request: /events
+2026-01-06 23:01:51 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 23:01:51 - GET request: /events
+2026-01-06 23:01:51 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 23:01:51 - GET request: /events
+2026-01-06 23:01:51 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 23:01:51 - POST request: /measure_volume
+2026-01-06 23:01:51 -   POST content_length: 43
+2026-01-06 23:01:51 -   POST command: measure_volume
+2026-01-06 23:01:51 - POST request: /measure_area
+2026-01-06 23:01:51 - [HTTP] "POST /measure_volume HTTP/1.1" 202 -
+2026-01-06 23:01:51 -   POST content_length: 56
+2026-01-06 23:01:51 - POST request: /measure_edge_length
+2026-01-06 23:01:51 -   POST command: measure_area
+2026-01-06 23:01:51 -   POST content_length: 63
+2026-01-06 23:01:51 - [HTTP] "POST /measure_area HTTP/1.1" 202 -
+2026-01-06 23:01:51 -   POST command: measure_edge_length
+2026-01-06 23:01:51 - [HTTP] "POST /measure_edge_length HTTP/1.1" 202 -
+2026-01-06 23:01:51 - POST request: /measure_body_properties
+2026-01-06 23:01:51 -   POST content_length: 52
+2026-01-06 23:01:51 -   POST command: measure_body_properties
+2026-01-06 23:01:51 - [HTTP] "POST /measure_body_properties HTTP/1.1" 202 -
+2026-01-06 23:06:57 - GET request: /events
+2026-01-06 23:06:57 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 23:06:57 - GET request: /events
+2026-01-06 23:06:57 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 23:06:57 - GET request: /events
+2026-01-06 23:06:57 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-06 23:06:57 - POST request: /measure_area
+2026-01-06 23:06:57 -   POST content_length: 56
+2026-01-06 23:06:57 -   POST command: measure_area
+2026-01-06 23:06:57 - [HTTP] "POST /measure_area HTTP/1.1" 202 -
+2026-01-06 23:06:57 - POST request: /create_parameter
+2026-01-06 23:06:57 -   POST content_length: 85
+2026-01-06 23:06:57 - POST request: /snapshot_create
+2026-01-06 23:06:57 -   POST command: create_parameter
+2026-01-06 23:06:57 - [HTTP] "POST /create_parameter HTTP/1.1" 400 -
+2026-01-06 23:06:57 -   POST content_length: 50
+2026-01-06 23:06:57 -   POST command: snapshot_create
+2026-01-06 23:06:57 - [HTTP] "POST /snapshot_create HTTP/1.1" 400 -
+2026-01-07 00:32:11 - GET request: /events
+2026-01-07 00:32:11 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-07 00:32:11 - POST request: /test_connection
+2026-01-07 00:32:11 -   POST content_length: 29
+2026-01-07 00:32:11 -   POST command: test_connection
+2026-01-07 00:32:11 - [HTTP] "POST /test_connection HTTP/1.1" 200 -
+2026-01-07 00:32:14 - GET request: /get_model_state
+2026-01-07 00:32:14 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-07 00:32:17 - GET request: /model_state
+2026-01-07 00:32:17 - [HTTP] "GET /model_state HTTP/1.1" 404 -
+2026-01-07 00:32:17 - GET request: /model_state
+2026-01-07 00:32:17 - [HTTP] "GET /model_state HTTP/1.1" 404 -
+2026-01-07 00:34:27 - GET request: /model_state
+2026-01-07 00:34:27 - [HTTP] "GET /model_state HTTP/1.1" 404 -
+2026-01-07 00:35:00 - GET request: /test_connection
+2026-01-07 00:35:00 - [HTTP] "GET /test_connection HTTP/1.1" 404 -
+2026-01-07 00:35:08 - POST request: /test_connection
+2026-01-07 00:35:16 - GET request: /get_model_state
+2026-01-07 00:35:16 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-07 00:35:22 - GET request: /model_state
+2026-01-07 00:35:22 - [HTTP] "GET /model_state HTTP/1.1" 404 -
+2026-01-07 00:36:01 - GET request: /model_state
+2026-01-07 00:36:01 - [HTTP] "GET /model_state HTTP/1.1" 404 -
+2026-01-07 00:37:22 - GET request: /model_state
+2026-01-07 00:37:22 - [HTTP] "GET /model_state HTTP/1.1" 404 -
+2026-01-07 00:37:22 - GET request: /model_state
+2026-01-07 00:37:22 - [HTTP] "GET /model_state HTTP/1.1" 404 -
+2026-01-07 00:37:27 - GET request: /get_model_state
+2026-01-07 00:37:27 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-07 09:54:45 - GET request: /get_model_state
+2026-01-07 09:54:45 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-07 09:54:45 - GET request: /get_model_state
+2026-01-07 09:54:45 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-07 09:54:48 - GET request: /get_model_state
+2026-01-07 09:54:48 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-07 09:54:53 - GET request: /get_model_state
+2026-01-07 09:54:53 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-07 09:54:56 - GET request: /get_model_state
+2026-01-07 09:54:56 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-07 09:54:59 - GET request: /get_model_state
+2026-01-07 09:54:59 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-07 09:54:59 - GET request: /events
+2026-01-07 09:54:59 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-07 09:54:59 - POST request: /execute
+2026-01-07 09:54:59 -   POST content_length: 139
+2026-01-07 09:54:59 -   POST command: execute_script
+2026-01-07 09:54:59 - [HTTP] "POST /execute HTTP/1.1" 202 -
+2026-01-07 09:55:04 - GET request: /get_model_state
+2026-01-07 09:55:04 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-07 09:55:07 - GET request: /get_model_state
+2026-01-07 09:55:07 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-07 09:55:12 - GET request: /get_model_state
+2026-01-07 09:55:12 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-07 09:55:12 - GET request: /get_model_state
+2026-01-07 09:55:12 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-07 09:55:16 - GET request: /get_model_state
+2026-01-07 09:55:16 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-07 09:55:16 - GET request: /get_model_state
+2026-01-07 09:55:16 - [HTTP] "GET /get_model_state HTTP/1.1" 200 -
+2026-01-07 10:47:36 - GET request: /events
+2026-01-07 10:47:36 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-07 10:47:36 - POST request: /get_class_info
+2026-01-07 10:47:36 -   POST content_length: 67
+2026-01-07 10:47:36 -   POST command: get_class_info
+2026-01-07 10:47:36 - [HTTP] "POST /get_class_info HTTP/1.1" 202 -
+2026-01-07 10:47:41 - GET request: /events
+2026-01-07 10:47:41 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-07 10:47:41 - POST request: /get_class_info
+2026-01-07 10:47:41 -   POST content_length: 71
+2026-01-07 10:47:41 -   POST command: get_class_info
+2026-01-07 10:47:41 - [HTTP] "POST /get_class_info HTTP/1.1" 202 -
+2026-01-07 10:48:06 - GET request: /events
+2026-01-07 10:48:06 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-07 10:48:06 - POST request: /execute
+2026-01-07 10:48:06 -   POST content_length: 4630
+2026-01-07 10:48:06 -   POST command: execute_script
+2026-01-07 10:48:06 - [HTTP] "POST /execute HTTP/1.1" 202 -
+2026-01-07 10:48:25 - GET request: /events
+2026-01-07 10:48:25 - [HTTP] "GET /events HTTP/1.1" 200 -
+2026-01-07 10:48:25 - POST request: /execute
+2026-01-07 10:48:25 -   POST content_length: 3073
+2026-01-07 10:48:25 -   POST command: execute_script
+2026-01-07 10:48:25 - [HTTP] "POST /execute HTTP/1.1" 202 -

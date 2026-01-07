@@ -97,7 +97,7 @@ def build_task_args(task_name: str, data: dict) -> tuple:
     if not info:
         raise ValueError(f"Unknown task: {task_name}")
 
-    args = [task_name]
+    args: list = [task_name]
     for param in info.params:
         if param.has_default:
             args.append(data.get(param.name, param.default))

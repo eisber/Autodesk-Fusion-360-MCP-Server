@@ -423,7 +423,14 @@ def delete_all(
     Returns:
         dict with counts of deleted items
     """
-    deleted = {"bodies": 0, "sketches": 0, "planes": 0, "axes": 0, "points": 0, "parameters": 0}
+    deleted: dict = {
+        "bodies": 0,
+        "sketches": 0,
+        "planes": 0,
+        "axes": 0,
+        "points": 0,
+        "parameters": 0,
+    }
 
     try:
         rootComp = design.rootComponent

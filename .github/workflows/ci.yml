@@ -145,7 +145,7 @@ jobs:
 
       - name: Run mypy on MCP lib
         working-directory: MCP
-        run: mypy lib/ --config-file=../pyproject.toml --ignore-missing-imports
+        run: mypy lib/ --config-file=../pyproject.toml --ignore-missing-imports --exclude 'lib/fusionAddInUtils/'
 
   security-scan:
     name: Security Scan

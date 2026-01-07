@@ -2,9 +2,9 @@
   "servers": {
     "fusion-mcp": {
       "type": "stdio",
-      "command": "${workspaceFolder}/venv/Scripts/python.exe",
-      "args": ["MCP_Server.py", "--server_type", "stdio"],
-      "cwd": "${workspaceFolder}/Server"
+      "command": "node",
+      "args": ["dist/index.js", "--server_type=stdio"],
+      "cwd": "${workspaceFolder}/Server-TS"
     }
   }
 }

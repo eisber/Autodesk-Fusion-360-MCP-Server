@@ -1,0 +1,34 @@
+{
+  "manifest_version": "0.3",
+  "name": "fusion360-mcp",
+  "display_name": "Fusion 360 MCP Server",
+  "version": "1.0.0",
+  "description": "Connect Claude to Autodesk Fusion 360 for 3D modeling and CAD operations",
+  "long_description": "Fusion MCP Integration bridges AI assistants with Autodesk Fusion 360 through the Model Context Protocol (MCP). This enables conversational CAD, AI-driven automation, parametric control, and accessible CAD for non-technical users.",
+  "author": {
+    "name": "Fusion 360 MCP Team",
+    "url": "https://github.com/eisber/Autodesk-Fusion-360-MCP-Server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eisber/Autodesk-Fusion-360-MCP-Server"
+  },
+  "homepage": "https://github.com/eisber/Autodesk-Fusion-360-MCP-Server",
+  "license": "MIT",
+  "server": {
+    "type": "node",
+    "entry_point": "dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/index.js", "--server_type=stdio"]
+    }
+  },
+  "tools_generated": true,
+  "keywords": [
+    "fusion360",
+    "autodesk",
+    "cad",
+    "3d-modeling",
+    "mcp"
+  ]
+}

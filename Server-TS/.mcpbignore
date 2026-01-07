@@ -1,0 +1,37 @@
+# Development dependencies (not needed for runtime)
+node_modules/@vitest/
+node_modules/vitest/
+node_modules/vite/
+node_modules/vite-node/
+node_modules/@types/
+node_modules/typescript/
+node_modules/tsx/
+node_modules/@anthropic-ai/mcpb/
+node_modules/@esbuild/
+node_modules/@rollup/
+
+# Test files
+tests/
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+
+# Config files
+vitest.config.ts
+tsconfig.json
+.eslintrc*
+
+# Source TypeScript (only need compiled JS)
+src/
+
+# Scripts
+scripts/
+
+# Git
+.git/
+.gitignore
+
+# Docs
+*.md
+!README.md

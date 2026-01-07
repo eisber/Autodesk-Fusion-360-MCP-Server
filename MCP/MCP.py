@@ -246,9 +246,211 @@ class TaskEventHandler(adsk.core.CustomEventHandler):
         if task_name == "execute_script":
             return execute_fusion_script(design, task[1], progress_fn, task_id)
 
+        # Special case: inspect_api - run introspection script
+        if task_name == "inspect_api":
+            path = task[1] if len(task) > 1 else "adsk.fusion"
+            return self._inspect_api(design, path, progress_fn, task_id)
+
+        # Special case: get_class_info - run class info script
+        if task_name == "get_class_info":
+            class_path = task[1] if len(task) > 1 else "adsk.fusion.Sketch"
+            return self._get_class_info(design, class_path, progress_fn, task_id)
+
         # Use registry dispatch - args are task[1:]
         args = list(task[1:]) if len(task) > 1 else []
         return registry_dispatch(task_name, design, ui, args)
+
+    def _inspect_api(self, design, path, progress_fn=None, task_id=None):
+        """Inspect Fusion 360 API at the given path."""
+        inspection_script = '''
+import inspect
+
+def get_type_name(obj):
+    """Get a readable type name for an object."""
+    t = type(obj).__name__
+    if t == 'type':
+        return 'class'
+    elif t == 'module':
+        return 'module'
+    elif t == 'builtin_function_or_method':
+        return 'method'
+    elif t == 'property':
+        return 'property'
+    elif t == 'getset_descriptor':
+        return 'property'
+    elif t == 'method_descriptor':
+        return 'method'
+    elif callable(obj):
+        return 'callable'
+    else:
+        return t
+
+def get_signature_str(obj):
+    """Try to get a signature string for a callable."""
+    try:
+        sig = inspect.signature(obj)
+        return str(sig)
+    except (ValueError, TypeError):
+        doc = getattr(obj, '__doc__', '') or ''
+        lines = doc.strip().split('\\n')
+        if lines and '(' in lines[0] and ')' in lines[0]:
+            return lines[0]
+        return None
+
+def get_member_info(name, obj, include_details=False):
+    """Get info about a single member."""
+    type_name = get_type_name(obj)
+    info = {'name': name, 'type': type_name}
+    
+    if include_details:
+        doc = getattr(obj, '__doc__', None)
+        if doc:
+            info['docstring'] = doc.strip()[:500]  # Truncate long docstrings
+        
+        if type_name in ('method', 'callable', 'builtin_function_or_method'):
+            sig = get_signature_str(obj)
+            if sig:
+                info['signature'] = sig
+    
+    return info
+
+def inspect_path(path):
+    """Inspect an adsk module path and return detailed info."""
+    parts = path.split('.')
+    
+    if parts[0] != 'adsk':
+        return {'error': f'Path must start with "adsk", got: {path}'}
+    
+    obj = adsk
+    traversed = ['adsk']
+    
+    for part in parts[1:]:
+        try:
+            obj = getattr(obj, part)
+            traversed.append(part)
+        except AttributeError:
+            return {
+                'error': f'"{part}" not found in {".".join(traversed)}',
+                'path': path,
+                'available': [m for m in dir(obj) if not m.startswith('_')][:50]
+            }
+    
+    result = {
+        'path': path,
+        'type': get_type_name(obj),
+    }
+    
+    doc = getattr(obj, '__doc__', None)
+    if doc:
+        result['docstring'] = doc.strip()[:1000]  # Truncate
+    
+    if result['type'] in ('method', 'callable', 'builtin_function_or_method', 'class'):
+        sig = get_signature_str(obj)
+        if sig:
+            result['signature'] = f'{parts[-1]}{sig}' if not sig.startswith(parts[-1]) else sig
+    
+    if result['type'] in ('module', 'class', 'type'):
+        members = []
+        for name in dir(obj):
+            if name.startswith('_'):
+                continue
+            try:
+                member_obj = getattr(obj, name)
+                member_info = get_member_info(name, member_obj, include_details=True)
+                members.append(member_info)
+            except Exception:
+                members.append({'name': name, 'type': 'unknown'})
+        
+        result['members'] = members
+        result['member_count'] = len(members)
+    
+    if result['type'] == 'property':
+        doc = result.get('docstring', '')
+        if 'Returns' in doc or 'returns' in doc:
+            result['returns'] = doc
+    
+    return result
+
+result = inspect_path(''' + repr(path) + ''')
+'''
+        return execute_fusion_script(design, inspection_script, progress_fn, task_id)
+
+    def _get_class_info(self, design, class_path, progress_fn=None, task_id=None):
+        """Get detailed class documentation."""
+        class_info_script = '''
+import inspect
+
+def get_type_name(obj):
+    t = type(obj).__name__
+    if t == 'type': return 'class'
+    elif t == 'module': return 'module'
+    elif t == 'builtin_function_or_method': return 'method'
+    elif t in ('property', 'getset_descriptor'): return 'property'
+    elif t == 'method_descriptor': return 'method'
+    elif callable(obj): return 'callable'
+    return t
+
+def get_signature_str(obj):
+    try:
+        return str(inspect.signature(obj))
+    except (ValueError, TypeError):
+        doc = getattr(obj, '__doc__', '') or ''
+        lines = doc.strip().split('\\n')
+        if lines and '(' in lines[0] and ')' in lines[0]:
+            return lines[0]
+        return None
+
+def get_class_info(class_path):
+    parts = class_path.split('.')
+    if parts[0] != 'adsk':
+        return {'error': f'Path must start with "adsk"'}
+    
+    obj = adsk
+    for part in parts[1:]:
+        try:
+            obj = getattr(obj, part)
+        except AttributeError:
+            return {'error': f'"{part}" not found in path'}
+    
+    class_name = parts[-1]
+    result = {
+        'class_name': class_name,
+        'path': class_path,
+        'methods': [],
+        'properties': []
+    }
+    
+    doc = getattr(obj, '__doc__', None)
+    if doc:
+        result['docstring'] = doc.strip()
+    
+    for name in sorted(dir(obj)):
+        if name.startswith('_'):
+            continue
+        try:
+            member = getattr(obj, name)
+            type_name = get_type_name(member)
+            
+            member_info = {'name': name}
+            member_doc = getattr(member, '__doc__', None)
+            if member_doc:
+                member_info['docstring'] = member_doc.strip()[:300]
+            
+            if type_name in ('method', 'callable', 'builtin_function_or_method'):
+                sig = get_signature_str(member)
+                if sig:
+                    member_info['signature'] = f'{name}{sig}'
+                result['methods'].append(member_info)
+            elif type_name == 'property':
+                result['properties'].append(member_info)
+        except Exception:
+            pass
+    
+    return result
+
+result = get_class_info(''' + repr(class_path) + ''')
+'''
+        return execute_fusion_script(design, class_info_script, progress_fn, task_id)
 
 
 class TaskThread(threading.Thread):
@@ -680,9 +882,10 @@ def execute_fusion_script(design, script_code, progress_fn=None, task_id=None):
 
         if "result" in exec_namespace:
             script_result_value = exec_namespace["result"]
-            # Serialize dicts/lists as JSON for proper parsing, strings as-is
+            # Keep dicts/lists as-is for proper JSON serialization
+            # Convert other types to string representation
             if isinstance(script_result_value, (dict, list)):
-                result["return_value"] = json.dumps(script_result_value)
+                result["return_value"] = script_result_value
             else:
                 result["return_value"] = str(script_result_value)
 
@@ -981,6 +1184,20 @@ class MCPRequestHandler(BaseHTTPRequestHandler):
                 task = ("execute_script", data.get("script", ""), task_id)
             else:
                 task = ("execute_script", data.get("script", ""))
+        # Special case: inspect_api - pass the path parameter
+        elif command == "inspect_api":
+            path = data.get("path", "adsk.fusion")
+            if task_id:
+                task = ("inspect_api", path, task_id)
+            else:
+                task = ("inspect_api", path)
+        # Special case: get_class_info - pass the class_path parameter
+        elif command == "get_class_info":
+            class_path = data.get("class_path", "adsk.fusion.Sketch")
+            if task_id:
+                task = ("get_class_info", class_path, task_id)
+            else:
+                task = ("get_class_info", class_path)
         else:
             # Use registry to auto-build task args from request data
             try:

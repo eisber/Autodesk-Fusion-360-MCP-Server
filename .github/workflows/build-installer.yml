@@ -234,12 +234,17 @@ jobs:
       # Code Signing (Optional)
       # =========================================================================
       - name: Setup code signing certificate
-        if: ${{ (github.event.inputs.sign != 'false') && (secrets.WINDOWS_SIGNING_CERT != '') }}
+        if: ${{ github.event.inputs.sign != 'false' }}
         id: setup-cert
         shell: pwsh
         env:
           WINDOWS_SIGNING_CERT: ${{ secrets.WINDOWS_SIGNING_CERT }}
         run: |
+          if (-not $env:WINDOWS_SIGNING_CERT) {
+            Write-Host "No signing certificate configured, skipping..."
+            exit 0
+          }
+          
           $certPath = "$env:TEMP\signing_cert.pfx"
           
           # Decode base64 certificate

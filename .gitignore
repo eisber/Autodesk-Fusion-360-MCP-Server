@@ -1,5 +1,15 @@
+# Python
 venv/**
 **/__pycache__/**
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Node.js / TypeScript
+node_modules/
+Server-TS/dist/
+Server-TS/*.mcpb
+*.tsbuildinfo
 
 # Build outputs
 dist/
@@ -15,13 +25,9 @@ mcp_debug.log
 
 # IDE
 .idea/
+.vscode/
 *.swp
 *.swo
-
-# Test coverage
-.coverage
-htmlcov/
-.pytest_cache/
 
 # Generated icons (keep SVG source)
 assets/*.ico
